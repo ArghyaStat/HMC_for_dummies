@@ -18,7 +18,7 @@ dev.off()
 
 ### Hamiltonian dynamics illustration
 
-pdf("hamiltnoian_dynamics1.pdf", width = 10, height = 5)
+pdf("hamiltnoian_dynamics1.pdf", width = 12, height = 5)
 
 par(mfrow = c(1,2))
 r <- 3
@@ -48,7 +48,7 @@ text(q[101]+.8, -dnorm(q[101], log = TRUE), "t = 2")
 dev.off()
 
 
-pdf("hamiltnoian_dynamics2.pdf", width = 10, height = 5)
+pdf("hamiltnoian_dynamics2.pdf", width = 12, height = 5)
 par(mfrow = c(1,2))
 q_new <- q
 p_new <- p
@@ -321,7 +321,9 @@ chain3 <- normalLF_HMC(L = 100, eps = .01) # more time consuming
 pdf("lfd2.pdf", width = 12, height = 5)
 par(mfrow = c(1,2))
 foo <- seq(-3, 3, length = 1e3)
-plot(foo, dnorm(foo), type = 'l', ylab = "Density")
+plot(foo, dnorm(foo), type = 'l', 
+     ylab = "Density",
+     xlab = "q")
 lines(density(chain3), col = "orange")
 lines(density(chain2), col = "red")
 lines(density(chain1), col = "blue")
@@ -348,7 +350,9 @@ chain3 <- normalLF_HMC(L = 1, eps = 10) #cheap but inaccurate
 pdf("lfd3.pdf", width = 12, height = 5)
 par(mfrow = c(1,2))
 foo <- seq(-3, 3, length = 1e3)
-plot(foo, dnorm(foo), type = 'l', ylab = "Density")
+plot(foo, dnorm(foo), type = 'l',
+     ylab = "Density",
+     xlab = "q")
 lines(density(chain2), col = "red")
 lines(density(chain1), col = "blue")
 lines(density(chain3), col = "orange")
