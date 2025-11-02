@@ -232,41 +232,138 @@ for (j in seq_len(ncol(samples_hmc))) {
 
 dev.off()
 
-library(dplyr)
 library(xtable)
 
-# ---- Posterior summary table ----
-posterior_summary <- as_tibble(samples_hmc) %>%
-  summarise(
-    Mean  = apply(., 2, mean),
-    SD    = apply(., 2, sd),
-    lower = apply(., 2, quantile, probs = 0.025),
-    upper = apply(., 2, quantile, probs = 0.975)
-  )
+# ---- Load samples (uncomment if needed) ----
+# load("posterior_samples_HMC.RData")  # loads samples_hmc, acc_rate_hmc
 
-# ---- Combine with variable names and format credible intervals ----
-posterior_summary <- tibble(
-  Variable = colnames(samples_hmc),
-  Mean = as.numeric(posterior_summary$Mean),
-  SD = as.numeric(posterior_summary$SD),
-  `95% CI` = paste0("[", 
-                    formatC(posterior_summary$lower, digits = 3, format = "f"), ", ",
-                    formatC(posterior_summary$upper, digits = 3, format = "f"), "]")
+# ---- Basic checks ----
+if (!exists("samples_hmc")) stop("samples_hmc not found in workspace. Load posterior_samples_HMC.RData first.")
+# coerce to matrix
+samples_hmc <- as.matrix(samples_hmc)
+d <- ncol(samples_hmc)
+
+# ---- User-provided var_names (optional). If length mismatch, auto-fix ----
+user_var_names <- c("(Intercept)", "pregnant", "glucose", "pressure",
+                    "triceps", "insulin", "mass", "pedigree", "age")
+# If you prefer to *always* use column names from samples_hmc, set:
+# user_var_names <- NULL
+
+if (is.null(user_var_names)) {
+  var_names <- if (!is.null(colnames(samples_hmc))) colnames(samples_hmc) else paste0("beta", seq_len(d))
+} else {
+  # ensure same length as d
+  if (length(user_var_names) == d) {
+    var_names <- user_var_names
+  } else if (length(user_var_names) > d) {
+    warning("Provided var_names longer than number of parameters in samples_hmc. Truncating to first ", d, " names.")
+    var_names <- user_var_names[1:d]
+  } else { # shorter
+    warning("Provided var_names shorter than number of parameters in samples_hmc. Using provided names for first ",
+            length(user_var_names), " and generating generic names for remaining.")
+    var_names <- c(user_var_names, paste0("beta", seq_len(d - length(user_var_names))))
+  }
+}
+
+# ---- Compute summaries (safe, base R) ----
+means  <- colMeans(samples_hmc)
+sds    <- apply(samples_hmc, 2, sd)
+lower2 <- apply(samples_hmc, 2, quantile, probs = 0.025, names = FALSE)
+upper2 <- apply(samples_hmc, 2, quantile, probs = 0.975, names = FALSE)
+
+# ---- Build tibble/data.frame (no size mismatch) ----
+posterior_summary <- data.frame(
+  Variable = var_names,
+  Mean = means,
+  SD = sds,
+  Lower = lower2,
+  Upper = upper2,
+  stringsAsFactors = FALSE
 )
 
-# ---- Create xtable object ----
-xtable_summary <- xtable(
-  posterior_summary,
-  digits = 3,  # single scalar fixes the mismatch issue
-  caption = "Posterior summary (mean, SD, and 95\\% credible intervals) from HMC samples",
-  label = "tab:posterior_summary"
+# ---- Format numeric columns for LaTeX (keep plain numeric columns too) ----
+# If you want \hphantom{0} alignment in the LaTeX output, we create a formatted text version.
+fmt_num_phantom0 <- function(x, digits = 3) {
+  sapply(x, function(v) {
+    if (is.na(v)) return("")
+    if (v >= 0) sprintf("\\hphantom{0}%.*f", digits, v) else sprintf("%.*f", digits, v)
+  }, USE.NAMES = FALSE)
+}
+
+# Formatted strings wrapped in $...$
+posterior_summary$Mean_fmt <- paste0("$", fmt_num_phantom0(posterior_summary$Mean, digits = 3), "$")
+posterior_summary$SD_fmt   <- paste0("$", fmt_num_phantom0(posterior_summary$SD, digits = 3), "$")
+posterior_summary$CI_fmt   <- paste0(
+  "$[",
+  fmt_num_phantom0(posterior_summary$Lower, digits = 3),
+  ",\\, ",
+  fmt_num_phantom0(posterior_summary$Upper, digits = 3),
+  "]$"
 )
 
-# ---- Print nicely for LaTeX ----
-print(
-  xtable_summary,
-  include.rownames = FALSE,
-  sanitize.text.function = identity,  # keep [ ] brackets
-  comment = FALSE,
-  booktabs = TRUE
+# ---- Final table to pass to xtable (keep formatted columns as character) ----
+tex_table <- data.frame(
+  Variable = posterior_summary$Variable,
+  `Posterior mean` = posterior_summary$Mean_fmt,
+  `Posterior sd`   = posterior_summary$SD_fmt,
+  `Posterior $95\\%$ CI` = posterior_summary$CI_fmt,
+  stringsAsFactors = FALSE
 )
+
+# ---- Create and print xtable (booktabs = FALSE as requested) ----
+xt <- xtable(tex_table,
+             caption = "Posterior summary (mean, SD, and 95\\% credible intervals) from HMC samples",
+             label = "tab:posterior_summary",
+             align = c("l", "l", "r", "r", "l"))
+
+print(xt,
+      include.rownames = FALSE,
+      sanitize.text.function = identity, # keep LaTeX markup
+      comment = FALSE,
+      booktabs = FALSE)
+
+
+
+# library(dplyr)
+# library(xtable)
+# 
+# # ---- Posterior summary table ----
+# posterior_summary <- as_tibble(samples_hmc) %>%
+#   summarise(
+#     Mean  = apply(., 2, mean),
+#     SD    = apply(., 2, sd),
+#     lower = apply(., 2, quantile, probs = 0.025),
+#     upper = apply(., 2, quantile, probs = 0.975)
+#   )
+# 
+# # ---- Combine with variable names and format credible intervals ----
+# posterior_summary <- tibble(
+#   Variable = colnames(samples_hmc),
+#   Mean = as.numeric(posterior_summary$Mean),
+#   SD = as.numeric(posterior_summary$SD),
+#   `95% CI` = paste0("[", 
+#                     formatC(posterior_summary$lower, digits = 3, format = "f"), ", ",
+#                     formatC(posterior_summary$upper, digits = 3, format = "f"), "]")
+# )
+# 
+# # ---- Create xtable object ----
+# xtable_summary <- xtable(
+#   posterior_summary,
+#   digits = 3,  # single scalar fixes the mismatch issue
+#   caption = "Posterior summary (mean, SD, and 95\\% credible intervals) from HMC samples",
+#   label = "tab:posterior_summary"
+# )
+# 
+# print(
+#   xtable_summary,
+#   include.rownames = FALSE,
+#   sanitize.text.function = identity,
+#   comment = FALSE,
+#   booktabs = FALSE  # <- use normal LaTeX rules, no \toprule/\midrule
+# )
+# 
+# # Robust posterior-summary -> LaTeX pipeline
+# # Assumes you have saved samples_hmc and acc_rate_hmc in posterior_samples_HMC.RData
+# # and that samples_hmc is an (iter x d) numeric matrix or data.frame.
+# 
+# 
