@@ -115,8 +115,8 @@ save(samples_hmc, acc_rate_hmc, file = "posterior_samples_HMC.RData")
 load("posterior_samples_HMC.RData")   # loads: samples_hmc, acc_rate_hmc
 
 # ---- Variable Names ----
-var_names <- c("(Intercept)", "pregnant", "glucose", "pressure",
-               "triceps", "insulin", "mass", "pedigree", "age")
+var_names <- c("Intercept", "pregnant", "glucose", "pressure",
+               "triceps", "mass", "pedigree", "age")
 
 # ---- PDF output ----
 pdf("HMC_density_plots.pdf", width = 10, height = 12)
@@ -128,8 +128,8 @@ par(mfrow = c(4, 2),                      # 8 panels → 4 rows × 2 columns
     mgp  = c(2.2, 0.8, 0))
 
 # ---- Font sizes ----
-cex_lab  <- 1.6
-cex_axis <- 1.4
+cex_lab  <- 2
+cex_axis <- 1.8
 lwd_line <- 2
 
 # ---- Plot densities ----
@@ -173,8 +173,8 @@ par(mfrow = c(4, 2),
     mgp  = c(2.2, 0.8, 0))
 
 # ---- Font sizes ----
-cex_lab  <- 1.6
-cex_axis <- 1.4
+cex_lab  <- 2
+cex_axis <- 1.8
 lwd_line <- 1.5
 
 # ---- Plot trace for each beta ----
@@ -209,8 +209,8 @@ par(mfrow = c(4, 2),
     mgp  = c(2.2, 0.8, 0))
 
 # ---- Font sizes ----
-cex_lab  <- 1.6
-cex_axis <- 1.4
+cex_lab  <- 2
+cex_axis <- 1.8
 lwd_line <- 2
 
 # ---- Lag length ----
@@ -234,34 +234,25 @@ dev.off()
 
 library(xtable)
 
-# ---- Load samples (uncomment if needed) ----
-# load("posterior_samples_HMC.RData")  # loads samples_hmc, acc_rate_hmc
-
-# ---- Basic checks ----
 if (!exists("samples_hmc")) stop("samples_hmc not found in workspace. Load posterior_samples_HMC.RData first.")
 # coerce to matrix
 samples_hmc <- as.matrix(samples_hmc)
 d <- ncol(samples_hmc)
 
-# ---- User-provided var_names (optional). If length mismatch, auto-fix ----
-user_var_names <- c("(Intercept)", "pregnant", "glucose", "pressure",
-                    "triceps", "insulin", "mass", "pedigree", "age")
-# If you prefer to *always* use column names from samples_hmc, set:
-# user_var_names <- NULL
 
-if (is.null(user_var_names)) {
+if (is.null(var_names)) {
   var_names <- if (!is.null(colnames(samples_hmc))) colnames(samples_hmc) else paste0("beta", seq_len(d))
 } else {
   # ensure same length as d
-  if (length(user_var_names) == d) {
-    var_names <- user_var_names
-  } else if (length(user_var_names) > d) {
+  if (length(var_names) == d) {
+    var_names <- var_names
+  } else if (length(var_names) > d) {
     warning("Provided var_names longer than number of parameters in samples_hmc. Truncating to first ", d, " names.")
-    var_names <- user_var_names[1:d]
+    var_names <- var_names[1:d]
   } else { # shorter
     warning("Provided var_names shorter than number of parameters in samples_hmc. Using provided names for first ",
-            length(user_var_names), " and generating generic names for remaining.")
-    var_names <- c(user_var_names, paste0("beta", seq_len(d - length(user_var_names))))
+            length(var_names), " and generating generic names for remaining.")
+    var_names <- c(var_names, paste0("beta", seq_len(d - length(var_names))))
   }
 }
 
