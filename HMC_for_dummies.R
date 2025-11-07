@@ -1,3 +1,5 @@
+rm(list = ls())
+
 mydir <- this.path::here()
 setwd(mydir)
 
@@ -78,7 +80,7 @@ p_new <- p
 p_new[1] <- 1
 
 r_new <-  sqrt(x_new[1]^2 + p_new[1]^2)
-a_new <-  atan(x_new[1]/r_new)
+a_new <-  acos(x_new[1]/r_new)
 
 t <- seq(0, 10, length = 5e2)
 x_new <- r_new * cos(a_new + t)
@@ -150,7 +152,7 @@ chain1 <- normalHMC(s = .1)
 chain2 <- normalHMC(s = 1)
 chain3 <- normalHMC(s = 5)
 
-pdf("lfd1.pdf", width = 16, height = 5)
+pdf("exact_normal1.pdf", width = 16, height = 5)
 
 # layout and base margins
 par(mfrow = c(1, 3), mar = c(4, 5, 1, 1), oma = c(0, 0, 0, 0))
@@ -224,42 +226,42 @@ dev.off()
 
 
 
-#### Leaf-frog discretization
+#### Leaf-frog discretization with different s
 
-# pdf("lfd1.pdf", width = 12, height = 5)
-# par(mfrow = c(1,2))
-# x <- seq(-3, 3, length = 1e3)
-# plot(x, dnorm(x), type = 'l',  lwd = 2,
-#      ylab = expression(Density~pi(x)),   # ← formula now rendered
-#      xlab = expression(Position~(x)), las = 1,
-#      cex.lab = 1.5,    # enlarge axis labels
-#      cex.axis = 1.2)
-# lines(density(chain3),  lwd = 2, col = "orange")
-# lines(density(chain2),  lwd = 2, col = "red")
-# lines(density(chain1),  lwd = 2, col = "blue")
-# legend("topright", 
-#        col = c("black", "orange", "red", "blue"), 
-#        legend = c("Truth", "s = 5", "s = 1", "s = .1"), lty = 1)
-# 
-# plot.ts(chain3, col = "orange", ylab = "Trace Plot", ylim = c(-4, 6))
-# lines(chain2, col = "red")
-# lines(chain1, col = "blue")
-# legend("topright", 
-#        col = c("orange", "red", "blue"), 
-#        legend = c("s = 5", "s = 1", "s = .1"), 
-#        lty = 1)
-# 
-# dev.off()
+pdf("lfd_with_diff_s.pdf", width = 12, height = 5)
+par(mfrow = c(1,2))
+x <- seq(-3, 3, length = 1e3)
+plot(x, dnorm(x), type = 'l',  lwd = 2,
+     ylab = expression(Density~pi(x)),   # ← formula now rendered
+     xlab = expression(Position~(x)), las = 1,
+     cex.lab = 1.5,    # enlarge axis labels
+     cex.axis = 1.2)
+lines(density(chain3),  lwd = 2, col = "orange")
+lines(density(chain2),  lwd = 2, col = "red")
+lines(density(chain1),  lwd = 2, col = "blue")
+legend("topright",
+       col = c("black", "orange", "red", "blue"),
+       legend = c("Truth", "s = 5", "s = 1", "s = .1"), lty = 1)
 
-## lfd5: Euler integrator — one panel per epsilon
-pdf("lfd5.pdf", width = 16, height = 5)
+plot.ts(chain3, col = "orange", ylab = "Trace Plot", ylim = c(-4, 6))
+lines(chain2, col = "red")
+lines(chain1, col = "blue")
+legend("topright",
+       col = c("orange", "red", "blue"),
+       legend = c("s = 5", "s = 1", "s = .1"),
+       lty = 1)
+
+dev.off()
+
+## Euler integrator — one panel per epsilon
+pdf("eular_traj.pdf", width = 16, height = 5)
 
 par(mfrow = c(1, 3), mar = c(4, 5, 1, 1), oma = c(0,0,0,0))
 
 # Plotting settings
 cex_lab  <- 2
 cex_axis <- 2
-cex_leg  <- 1.5
+cex_leg  <- 2
 pt_cex   <- 1.5
 lwd_line <- 2
 
@@ -271,7 +273,7 @@ x_true <- r * cos(a + t_cont)
 p_true <- -r * sin(a + t_cont)
 
 eps_vals <- c(0.5, 0.2, 0.1)
-cols <- c("purple", "blue", "pink")
+cols <- c("darkgreen", "darkblue", "darkred")
 
 for (k in seq_along(eps_vals)) {
   eps <- eps_vals[k]
@@ -309,16 +311,77 @@ for (k in seq_along(eps_vals)) {
 
 dev.off()
 
-
-## lfd6: Leapfrog integrator — one panel per epsilon
-pdf("lfd4.pdf", width = 16, height = 5)
+## Modified Euler integrator — one panel per epsilon
+pdf("modified_euler_traj.pdf", width = 16, height = 5)
 
 par(mfrow = c(1, 3), mar = c(4, 5, 1, 1), oma = c(0,0,0,0))
 
 # Plotting settings
 cex_lab  <- 2
 cex_axis <- 2
-cex_leg  <- 1.5
+cex_leg  <- 2
+pt_cex   <- 1.5
+lwd_line <- 2
+
+# True Hamiltonian (analytic circular orbit)
+r <- 3
+a <- 1
+t_cont <- seq(0, 2*pi, length.out = 1e3)
+x_true <- r * cos(a + t_cont)
+p_true <- -r * sin(a + t_cont)
+
+eps_vals <- c(0.5, 0.2, 0.1)
+cols <- c("darkgreen", "darkblue", "darkred")
+
+for (k in seq_along(eps_vals)) {
+  eps <- eps_vals[k]
+  
+  # Modified Euler discrete trajectory
+  t_seq <- seq(0, 20 * eps, by = eps)
+  n <- length(t_seq)
+  m_p <- numeric(n)
+  m_q <- numeric(n)
+  m_p[1] <- p_true[1]
+  m_q[1] <- x_true[1]
+  
+  for (i in 2:n) {
+    # Modified Euler (symplectic Euler)
+    m_p[i] <- m_p[i-1] - eps * m_q[i-1]
+    m_q[i] <- m_q[i-1] + eps * m_p[i]   # <-- use new momentum!
+  }
+  
+  # Panel plot: true contour + modified Euler trajectory
+  plot(x_true, p_true, type = "l", lwd = lwd_line, col = "black",
+       xlim = c(-3.5, 3.5), ylim = c(-3.5, 3.5), asp = 1,
+       xlab = expression(Position~(x)),
+       ylab = expression(Momentum~(p)),
+       cex.lab = cex_lab, cex.axis = cex_axis, las = 1)
+  lines(m_q, m_p, type = "b", pch = 16, cex = pt_cex,
+        col = cols[k], lty = 2, lwd = lwd_line)
+  
+  # Legend: true Hamiltonian + epsilon
+  legend("topright",
+         legend = c(expression(H_true), bquote(epsilon == .(eps))),
+         col = c("black", cols[k]),
+         lty = c(1,2),
+         pch = c(NA, 16),
+         lwd = c(lwd_line, lwd_line),
+         bty = "n", cex = cex_leg)
+}
+
+dev.off()
+
+
+
+## lfd6: Leapfrog integrator — one panel per epsilon
+pdf("leapfrog_traj.pdf", width = 16, height = 5)
+
+par(mfrow = c(1, 3), mar = c(4, 5, 1, 1), oma = c(0,0,0,0))
+
+# Plotting settings
+cex_lab  <- 2
+cex_axis <- 2
+cex_leg  <- 2
 pt_cex   <- 1.5
 lwd_line <- 2
 
@@ -330,7 +393,7 @@ x_true <- r * cos(a + t_cont)
 p_true <- -r * sin(a + t_cont)
 
 eps_vals <- c(0.5, 0.2, 0.1)
-cols <- c("purple", "blue", "pink")
+cols <- c("darkgreen", "darkblue", "darkred")
 L <- 20
 
 for (k in seq_along(eps_vals)) {
@@ -371,9 +434,9 @@ for (k in seq_along(eps_vals)) {
 dev.off()
 
 
+########## 
 
-
-pdf("lfd4.pdf", width = 4, height = 4)
+pdf("lfd_normal_diff_s.pdf", width = 4, height = 4)
 r <- 3
 a <- 1
 t <- seq(0, 10, length = 5e2)
@@ -419,13 +482,16 @@ for(i in 2:L)
   if(i != L) e_p[i] <- e_p[i-1] - eps*e_q[i]
 }
 e_p[L] <- e_p[L-1] - eps*e_q[L]/2
-lines(e_q, e_p, lty = 2, col = "pink", type = "b", pch = 16)
+lines(e_q, e_p, lty = 2, col = "darkgreen", type = "b", pch = 16)
 legend("center", 
        legend = c("eps = .3", "eps = .2", "eps = .1"), 
-       fill = c("purple", "blue", "pink"), 
+       fill = c("darkgreen", "darkblue", "darkred"), 
        cex = .80, bty = "n")
 
 dev.off()
+
+
+########## Leapfrog for standard Normal ############
 
 
 normalLF_HMC <- function(L = 10, eps = .1, n = 1e4)
@@ -472,7 +538,8 @@ chain1 <- normalLF_HMC(L = 10, eps = .1)
 chain2 <- normalLF_HMC(L = 1, eps = 1)
 chain3 <- normalLF_HMC(L = 100, eps = .01) # more time consuming
 
-pdf("lfd2.pdf", width = 16, height = 5)
+########## Leapfrog with s = 1 #########
+pdf("lfd_with_s1.pdf", width = 16, height = 5)
 
 # layout and base margins
 par(mfrow = c(1, 3), mar = c(4, 5, 1, 1), oma = c(0, 0, 0, 0))
@@ -548,7 +615,8 @@ chain1 <- normalLF_HMC(L = 100, eps = .1)
 chain2 <- normalLF_HMC(L = 10,  eps = 1)
 chain3 <- normalLF_HMC(L = 1,   eps = 10)
 
-pdf("lfd3.pdf", width = 16, height = 5)
+########## Leapfrog with s = 1 #########
+pdf("lfd_with_s10.pdf", width = 16, height = 5)
 
 par(mfrow = c(1, 3), mar = c(4, 5, 1, 1), oma = c(0, 0, 0, 0))
 
