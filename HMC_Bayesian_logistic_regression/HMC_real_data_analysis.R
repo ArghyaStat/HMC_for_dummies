@@ -29,14 +29,14 @@ leapfrog_hmc <- function(epsilon, L, niters, U, grad, x_init, M) {
     p_prop <- p_prop - (epsilon / 2) * g
     
    
-    for (ell in 1:L) {
+    for (l in 1:L) {
       
       # position update
       x_prop <- x_prop + epsilon * (M_inv %*% p_prop)
       
       # momentum update
       g <- grad(x_prop)
-      if (ell != L) {
+      if (l != L) {
         p_prop <- p_prop - epsilon * g
       } else {
         p_prop <- p_prop - (epsilon / 2) * g
