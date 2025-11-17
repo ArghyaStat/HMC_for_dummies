@@ -38,10 +38,10 @@ leapfrog_hmc <- function(epsilon, L, niters, U, grad, x_init, M) {
       g <- grad(x_prop)
       if (l != L) {
         p_prop <- p_prop - epsilon * g
-      } else {
-        p_prop <- p_prop - (epsilon / 2) * g
-      }
+      } 
     }
+    
+    p_prop <- p_prop - (epsilon / 2) * g
     
    
     x_curr <- x[k-1, ]
