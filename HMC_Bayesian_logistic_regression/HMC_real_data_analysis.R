@@ -101,7 +101,7 @@ grad_U <- function(beta) {
 # --- HMC parameters ---
 warmup <- 1e5
 epsilon <- 2.1e-3 
-L <- 30
+L <- 20
 M <- diag(d)
 
 
@@ -122,10 +122,11 @@ beta_warmup <- hmc_warmup$samples
 
 
 # --- HMC parameters ---
-niters <- 1e5
-epsilon <- 2.4e-6
-L <- 30
-M <- cov(beta_warmup)
+niters <- 5e4
+epsilon <- 1.1
+# epsilon <- 2.4e-6
+L <- 20
+M <- solve(cov(beta_warmup))
   # diag(diag(cov(beta_warmup)))
 
 
@@ -159,7 +160,7 @@ var_names <- c("Intercept", "pregnant", "glucose", "pressure",
 library(SimTools)
 library(MASS)
 
-k <- 1e5
+k <- 1e4
 # ---- Subset last k samples ----
 samples_lastk <- tail(beta_samples, k)
 dim(samples_lastk)
@@ -252,7 +253,7 @@ cex_axis <- 1.8
 lwd_line <- 2
 
 # ---- Lag length ----
-lag_max <- 1e3
+lag_max <- 50
 
 # ---- Plot ACF for each beta ----
 for (j in seq_len(ncol(beta_samples))) {
@@ -433,3 +434,51 @@ print(xt,
 # 
 # dev.off()
 
+# set.seed(42)
+# 
+# # 1) choose dimensions and iterations
+# d <- 4
+# niters <- 500   # choose moderate size so cov(t(p)) is printable
+# 
+# # 2) build a small non-diagonal positive-definite matrix M
+# A <- matrix(c(1.0, 0.6, 0.2, 0.1,
+#               0.6, 1.5, 0.3, 0.2,
+#               0.2, 0.3, 1.2, 0.4,
+#               0.1, 0.2, 0.4, 1.3), nrow = d, byrow = TRUE)
+# 
+# 
+# 
+# # 3) Cholesky (R is upper triangular in R such that M = R^T %*% R)
+# R <- chol(A)
+# 
+# # 4) sample p: each row ~ N(0, M)
+# Z <- matrix(rnorm(niters * d), nrow = niters, ncol = d)  # niters x d
+# p <- Z %*% R                                           # niters x d
+# 
+# # 5) empirical column-wise covariance (cov across rows) -> should approx M
+# emp_cov_cols <- cov(p)    # d x d
+# 
+# # 6) empirical row-wise covariance (cov across columns) -> niters x niters
+# #    For independent rows, off-diagonals should be ~ 0.
+# emp_cov_rows <- cov(t(p)) # niters x niters
+# 
+# # 7) diagnostics
+# cat("True A:\n")
+# print(round(A, 4))
+# 
+# cat("\nEmpirical covariance of columns (cov(p)):\n")
+# print(round(emp_cov_cols, 4))
+# 
+# cat("\nMax abs difference between cov(p) and M:\n")
+# print(max(abs(emp_cov_cols - A)))
+# 
+# cat("\nSummary of emp_cov_rows (cov between rows):\n")
+# print(summary(as.vector(emp_cov_rows)))
+# 
+# # Optionally show a small block of emp_cov_rows (first 8x8) to see near-zero off-diagonals:
+# cat("\nTop-left 8x8 block of cov(t(p)) (rows covariance):\n")
+# print(round(emp_cov_rows[1:min(8,niters), 1:min(8,niters)], 4))
+# 
+# 
+# 
+# p <- matrix(rnorm(niters * d), nrow = niters, ncol = d) %*% chol_M
