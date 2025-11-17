@@ -22,14 +22,13 @@ leapfrog_hmc <- function(epsilon, L, niters, U, grad, x_init, M) {
  
   for (k in 2:niters) {
     
-    x_prop <- x[k-1, ]        # start from previous sample
-    p_prop <- p[k, ]          # future momentum already drawn
+    x_prop <- x[k-1, ]        
+    p_prop <- p[k, ]        
     
-    # Half step for momentum
     g <- grad(x_prop)
     p_prop <- p_prop - (epsilon / 2) * g
     
-    # Full steps
+   
     for (ell in 1:L) {
       
       # position update
@@ -44,7 +43,7 @@ leapfrog_hmc <- function(epsilon, L, niters, U, grad, x_init, M) {
       }
     }
     
-    # ---- Hamiltonian energies ----
+   
     x_curr <- x[k-1, ]
     p_curr <- p[k, ]
     
@@ -79,7 +78,7 @@ n <- nrow(X)
 d <- ncol(X)  # number of regression coefficients
 
 # ---- Prior ----
-sigma2_beta <- 1e2  # (sigma_prior = 10)^2
+sigma2_beta <- 1e2 
 
 # ---- Potential Energy and Gradient ----
 U <- function(beta) {
@@ -100,13 +99,13 @@ grad_U <- function(beta) {
 
 
 # --- HMC parameters ---
-warmup <- 2e5
-epsilon <- 2.1e-3 # chol_M
+warmup <- 1e5
+epsilon <- 2.1e-3 
 L <- 30
 M <- diag(d)
 
 
-# --- Initialize beta ---
+# --- Initialize beta using MLE ---
 beta_init <- glm(y ~ X - 1, family = "binomial")$coefficients
 
 hmc_warmup <- leapfrog_hmc(epsilon = epsilon, 
