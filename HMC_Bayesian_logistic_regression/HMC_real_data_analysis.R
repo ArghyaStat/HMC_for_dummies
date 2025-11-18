@@ -1,5 +1,8 @@
 rm(list = ls())
 
+mydir <- this.path::here()
+setwd(mydir)
+
 # ---- Hamiltonian Monte Carlo (HMC) ----
 
 leapfrog_hmc <- function(epsilon, L, niters, U, grad, x_init, M) {

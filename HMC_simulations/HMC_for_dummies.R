@@ -3,7 +3,7 @@ rm(list = ls())
 mydir <- this.path::here()
 setwd(mydir)
 
-pdf("gaussian_potential.pdf", width = 8, height = 3.5)
+pdf("gaussian_potential.pdf", width = 12, height = 5)
 
 x <- seq(-3, 3, length = 5e2)
 
@@ -167,7 +167,7 @@ x <- seq(-3, 3, length = 1e3)
 ## (1) Density plot: explicitly supply cex.* here so it matches
 plot(x, dnorm(x), type = "l", lwd = 2,
      ylab = expression(Density~pi(x)), xlab = expression(Position~(x)),
-     cex.lab = 2.2, cex.axis = 1.8)
+     cex.lab = cex_lab, cex.axis = cex_axis)
 lines(density(chain3), col = "orange", lwd = 2)
 lines(density(chain2), col = "red",    lwd = 2)
 lines(density(chain1), col = "blue",   lwd = 2)
@@ -178,7 +178,7 @@ legend("topright",
 
 ## (2) Trace plot: suppress axes/labels and add them manually with cex
 plot.ts(chain3, col = "orange", lwd = 2, ylim = c(-4, 6),
-        axes = FALSE, ann = FALSE)   # suppress default axes and labels
+        axes = FALSE, ann = FALSE,  cex.lab = cex_lab)   # suppress default axes and labels
 lines(chain2, col = "red",  lwd = 2)
 lines(chain1, col = "blue", lwd = 2)
 # add axes with explicit cex.axis
@@ -206,7 +206,7 @@ lags <- as.numeric(acf1$lag)
 plot(lags, as.numeric(acf1$acf), type = "l", lwd = 2, col = "blue",
      ylim = c(min(c(acf1$acf, acf2$acf, acf3$acf)),
               max(c(acf1$acf, acf2$acf, acf3$acf))),
-     axes = FALSE, xlab = "", ylab = "")
+     axes = FALSE, xlab = "", ylab = "", cex.lab = cex_lab)
 lines(lags, as.numeric(acf2$acf), col = "red",    lwd = 2)
 lines(lags, as.numeric(acf3$acf), col = "orange", lwd = 2)
 
@@ -259,8 +259,8 @@ pdf("eular_traj.pdf", width = 16, height = 5)
 par(mfrow = c(1, 3), mar = c(4, 5, 1, 1), oma = c(0,0,0,0))
 
 # Plotting settings
-cex_lab  <- 2
-cex_axis <- 2
+cex_lab  <- 1.5
+cex_axis <- 1.2
 cex_leg  <- 2
 pt_cex   <- 1.5
 lwd_line <- 2
@@ -317,8 +317,8 @@ pdf("modified_euler_traj.pdf", width = 16, height = 5)
 par(mfrow = c(1, 3), mar = c(4, 5, 1, 1), oma = c(0,0,0,0))
 
 # Plotting settings
-cex_lab  <- 2
-cex_axis <- 2
+cex_lab  <- 1.5
+cex_axis <- 1.2
 cex_leg  <- 2
 pt_cex   <- 1.5
 lwd_line <- 2
@@ -379,8 +379,8 @@ pdf("leapfrog_traj.pdf", width = 16, height = 5)
 par(mfrow = c(1, 3), mar = c(4, 5, 1, 1), oma = c(0,0,0,0))
 
 # Plotting settings
-cex_lab  <- 2
-cex_axis <- 2
+cex_lab  <- 1.5
+cex_axis <- 1.2
 cex_leg  <- 2
 pt_cex   <- 1.5
 lwd_line <- 2
