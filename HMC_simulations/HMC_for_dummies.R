@@ -615,7 +615,7 @@ chain1 <- normalLF_HMC(L = 100, eps = .1)
 chain2 <- normalLF_HMC(L = 10,  eps = 1)
 chain3 <- normalLF_HMC(L = 1,   eps = 10)
 
-########## Leapfrog with s = 1 #########
+########## Leapfrog with s = 10 #########
 pdf("lfd_with_s10.pdf", width = 16, height = 5)
 
 par(mfrow = c(1, 3), mar = c(4, 5, 1, 1), oma = c(0, 0, 0, 0))
@@ -683,5 +683,184 @@ legend("topright",
                   expression(epsilon == 1),
                   expression(epsilon == 0.1)),
        lty = 1, cex = 2, bty = "n")
+
+dev.off()
+
+#### Taking account for periodicity #######
+eps <- 0.1
+
+L_full    <- round(2 * pi / eps)        # ≈ 628
+L_half    <- round(pi / eps)            # ≈ 314
+L_quarter <- round(pi / (2 * eps))      # ≈ 157
+
+cat("L values:\n")
+cat("Full period L =", L_full, "\n")
+cat("Half period L =", L_half, "\n")
+cat("Quarter period L =", L_quarter, "\n")
+
+########## Run HMC Chains ##########
+
+chain_full    <- normalLF_HMC(L = L_full,    eps = eps)
+chain_half    <- normalLF_HMC(L = L_half,    eps = eps)
+chain_quarter <- normalLF_HMC(L = L_quarter, eps = eps)
+
+########## Plot: Density, Trace, ACF ##########
+
+pdf("lfd_period_based.pdf", width = 16, height = 5)
+
+par(mfrow = c(1, 3), mar = c(4, 5, 1, 1), oma = c(0,0,0,0))
+
+cex_lab  <- 1.5
+cex_axis <- 1.2
+leg_cex  <- 2
+
+x <- seq(-3, 3, length = 1000)
+
+### (1) Density plot
+plot(x, dnorm(x), type = "l", lwd = 2,
+     ylab = expression(Density~pi(x)),
+     xlab = expression(Position~(x)),
+     cex.lab = 2.2, cex.axis = 1.8)
+
+lines(density(chain_quarter), col = "orange", lwd = 2)
+lines(density(chain_half),    col = "red",    lwd = 2)
+lines(density(chain_full),    col = "blue",   lwd = 2)
+
+legend("topright",
+       col = c("black", "orange", "red", "blue"),
+       legend = c("Truth",
+                  "Quarter period",
+                  "Half period",
+                  "Full period"),
+       lty = 1, cex = 2.2, bty = "n")
+
+### (2) Trace plot
+plot.ts(chain_quarter, col = "orange", lwd = 2,
+        ylim = range(c(chain_quarter, chain_half, chain_full)),
+        axes = FALSE, ann = FALSE)
+lines(chain_half, col = "red",  lwd = 2)
+lines(chain_full, col = "blue", lwd = 2)
+
+axis(1, cex.axis = cex_axis)
+axis(2, cex.axis = cex_axis)
+box()
+
+mtext(expression(Iterations), side = 1, line = 2.8, cex = cex_lab)
+mtext("Trace plot",          side = 2, line = 3.5, cex = cex_lab)
+
+legend("topright",
+       col = c("orange", "red", "blue"),
+       legend = c("Quarter period",
+                  "Half period",
+                  "Full period"),
+       lty = 1, cex = 2, bty = "n")
+
+### (3) ACF plot
+lagmax <- 50
+acf_full    <- acf(chain_full,    plot = FALSE, lag.max = lagmax)
+acf_half    <- acf(chain_half,    plot = FALSE, lag.max = lagmax)
+acf_quarter <- acf(chain_quarter, plot = FALSE, lag.max = lagmax)
+
+lags <- as.numeric(acf_full$lag)
+
+plot(lags, as.numeric(acf_full$acf), type = "l", lwd = 2, col = "blue",
+     ylim = range(c(acf_full$acf, acf_half$acf, acf_quarter$acf)),
+     axes = FALSE, xlab = "", ylab = "")
+
+lines(lags, as.numeric(acf_half$acf),    col = "red",    lwd = 2)
+lines(lags, as.numeric(acf_quarter$acf), col = "orange", lwd = 2)
+
+axis(1, cex.axis = cex_axis)
+axis(2, cex.axis = cex_axis)
+box()
+
+mtext("Lag", side = 1, line = 2.8, cex = cex_lab)
+mtext("ACF", side = 2, line = 3.5, cex = cex_lab)
+
+legend("topright",
+       col = c("orange", "red", "blue"),
+       legend = c("Quarter period",
+                  "Half period",
+                  "Full period"),
+       lty = 1, cex = 2, bty = "n")
+
+dev.off()
+
+
+########## Leapfrog trajectories for different L (fixed epsilon) ##########
+
+pdf("leapfrog_traj_periodicity.pdf", width = 16, height = 5)
+
+par(mfrow = c(1, 3), mar = c(4, 5, 1, 1), oma = c(0,0,0,0))
+
+# Plotting settings
+cex_lab  <- 1.5
+cex_axis <- 1.2
+cex_leg  <- 2
+pt_cex   <- 1.5
+lwd_line <- 2
+
+# True Hamiltonian circular orbit
+r <- 3
+a <- 1
+t_cont <- seq(0, 2 * pi, length.out = 1000)
+x_true <- r * cos(a + t_cont)
+p_true <- -r * sin(a + t_cont)
+
+# Fixed epsilon
+eps <- 0.1
+
+# Three choices of L: quarter, half, full period
+L_vals <- c(
+  round(pi / (2 * eps)),   # Quarter period
+  round(pi / eps),         # Half period
+  round(2 * pi / eps)      # Full period
+)
+
+cols <- c("darkgreen", "darkblue", "darkred")
+
+for (k in seq_along(L_vals)) {
+  
+  L <- L_vals[k]
+  
+  # Leapfrog trajectory arrays
+  e_q <- numeric(L)
+  e_p <- numeric(L)
+  
+  # Initial condition matches analytic start
+  e_q[1] <- x_true[1]
+  e_p[1] <- p_true[1] - (eps/2) * e_q[1]
+  
+  # Leapfrog iterations
+  if (L >= 2) {
+    for (i in 2:L) {
+      e_q[i] <- e_q[i-1] + eps * e_p[i-1]
+      if (i != L) e_p[i] <- e_p[i-1] - eps * e_q[i]
+    }
+    e_p[L] <- e_p[L-1] - (eps/2) * e_q[L]
+  }
+  
+  # Panel: true circular orbit + leapfrog trajectory
+  plot(x_true, p_true, type = "l", lwd = lwd_line, col = "black",
+       xlim = c(-3.5, 3.5), ylim = c(-3.5, 3.5), asp = 1,
+       xlab = expression(Position~(x)),
+       ylab = expression(Momentum~(p)),
+       cex.lab = cex_lab, cex.axis = cex_axis, las = 1)
+  
+  lines(e_q, e_p, type = "b", pch = 16, cex = pt_cex,
+        col = cols[k], lty = 2, lwd = lwd_line)
+  
+  # Legend: true Hamiltonian + L
+  legend("topright",
+         legend = c(
+           expression(H_true),
+           bquote(L == .(L))
+         ),
+         col = c("black", cols[k]),
+         lty = c(1,2),
+         pch = c(NA, 16),
+         lwd = c(lwd_line, lwd_line),
+         bty = "n", cex = cex_leg)
+}
 
 dev.off()
