@@ -157,6 +157,9 @@ save(beta_samples, accept_main, file = "posterior_beta_samples.RData")
 
 load("posterior_beta_samples.RData")   
 
+beta_samples <- beta_warmup
+niters <- warmup
+
 var_names <- c("Intercept", "pregnant", "glucose", "pressure",
                "triceps", "mass", "pedigree", "age")
 
@@ -256,7 +259,7 @@ cex_axis <- 1.8
 lwd_line <- 2
 
 # ---- Lag length ----
-lag_max <- 50
+lag_max <- 1e3
 
 # ---- Plot ACF for each beta ----
 for (j in seq_len(ncol(beta_samples))) {
