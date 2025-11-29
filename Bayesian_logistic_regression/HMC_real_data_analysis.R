@@ -126,11 +126,11 @@ beta_warmup <- hmc_warmup$samples
 
 # --- HMC parameters ---
 niters <- 5e4
-epsilon <- 1.1
-# epsilon <- 2.4e-6
+#epsilon <- 1.1 # tuning for full pre-conditioning
+epsilon <- 0.11 # tuning for diagonal pre-conditioning
 L <- 20
-M <- solve(cov(beta_warmup))
-  # diag(diag(cov(beta_warmup)))
+M <- diag(1/diag(cov(beta_warmup))) # diagonal preconditiong
+  # solve(cov(beta_warmup))  ## full preconditioning
 
 
 # --- Initialize beta ---
@@ -157,8 +157,8 @@ save(beta_samples, accept_main, file = "posterior_beta_samples.RData")
 
 load("posterior_beta_samples.RData")   
 
-beta_samples <- beta_warmup
-niters <- warmup
+# beta_samples <- beta_warmup
+# niters <- warmup
 
 var_names <- c("Intercept", "pregnant", "glucose", "pressure",
                "triceps", "mass", "pedigree", "age")
@@ -227,7 +227,7 @@ for (j in 1:d) {
   beta_j <- samples_lastk[, j]
   mean_j <- mean(samples_lastk[, j])
   
-  plot(1:k, beta_j, type = "l", lwd = lwd_line,
+  plot((niters - k + 1):niters, beta_j, type = "l", lwd = lwd_line,
        col = "darkorange", bty = "l",
        xlab = "Iterations", ylab = var_names[j],
        cex.lab = cex_lab, cex.axis = cex_axis)
@@ -259,7 +259,7 @@ cex_axis <- 1.8
 lwd_line <- 2
 
 # ---- Lag length ----
-lag_max <- 1e3
+lag_max <- 1e2
 
 # ---- Plot ACF for each beta ----
 for (j in seq_len(ncol(beta_samples))) {
