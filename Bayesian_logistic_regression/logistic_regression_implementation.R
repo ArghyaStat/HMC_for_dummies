@@ -248,7 +248,7 @@ for (j in 1:d) {
 dev.off()
 
 # ---- PDF output ----
-pdf("HMC_acf_plots.pdf", width = 10, height = 12)
+pdf("HMC_acf_combined.pdf", width = 10, height = 12)
 
 # ---- Layout and margins ----
 par(mfrow = c(4, 2),
@@ -290,12 +290,12 @@ for (j in seq_len(ncol(beta_samples))) {
   abline(h = 0, lty = 3)
   
   legend("topright",
-         legend = c("post-warmup (chain)", "warmup"),
+         legend = c("pre-conditioned sampler", "naive sampler"),
          col = c("darkred", "darkblue"),
          lwd = lwd_line,
          lty = 1,
          bty = "n",
-         cex = 1.2)
+         cex = 1.4)
 }
 
 dev.off()
