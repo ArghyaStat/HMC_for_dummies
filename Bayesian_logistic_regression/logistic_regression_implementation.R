@@ -256,12 +256,10 @@ lag_max <- 100
 lags <- 0:lag_max
 p <- ncol(beta_samples)
 
-# --- LEFT PANEL: naive sampler (darkblue, dashed) ---
-# Compute first ACF to open the plot
-acf_naive <- acf(beta_warmup[,1], plot = FALSE, lag.max = lag_max)$acf
-ylim_all <- range(acf_naive)   # initialize range
 
-# Expand y-limits to include all components from both samplers
+acf_naive <- acf(beta_warmup[,1], plot = FALSE, lag.max = lag_max)$acf
+ylim_all <- range(acf_naive)  
+
 for (j in seq_len(p)) {
   ylim_all <- range(c(
     ylim_all,
@@ -270,7 +268,7 @@ for (j in seq_len(p)) {
   ))
 }
 
-# Plot naive sampler ACF curves
+
 plot(lags, acf_naive, type = "l", lwd = 2, col = "darkblue", lty = 2,
      xlab = "Lag", ylab = "ACF", las = 1,
      cex.lab = 1.5, cex.axis = 1.2,
@@ -282,14 +280,10 @@ for (j in seq_len(p)) {
         col = "darkblue", lwd = 2, lty = 1)
 }
 
-legend("topright",
-       legend = c("naive sampler"),
-       col = "darkblue", lty = 1, lwd = 2, bty = "n", cex = 1.2)
 
-abline(h = 0, lty = 3)
+abline(h = 0, lty = 2)
 
 
-# --- RIGHT PANEL: preconditioned sampler (darkred, solid) ---
 acf_pre <- acf(beta_samples[,1], plot = FALSE, lag.max = lag_max)$acf
 
 plot(lags, acf_pre, type = "l", lwd = 2, col = "darkred", lty = 1,
@@ -303,19 +297,22 @@ for (j in seq_len(p)) {
         col = "darkred", lwd = 2, lty = 1)
 }
 
-legend("topright",
-       legend = c("preconditioned sampler"),
-       col = "darkred", lty = 1, lwd = 2, bty = "n", cex = 1.2)
 
-abline(h = 0, lty = 3)
+abline(h = 0, lty = 2)
 
 dev.off()
 
 
 
+# legend("topright",
+#        legend = c("naive sampler"),
+#        col = "darkblue", lty = 1, lwd = 2, bty = "n", cex = 1.2)
+# 
 
-
-
+# legend("topright",
+#        legend = c("preconditioned sampler"),
+#        col = "darkred", lty = 1, lwd = 2, bty = "n", cex = 1.2)
+# 
 # ---- Single combined ACF plot for all components (8 + 8 = 16) ----
 # pdf("HMC_acf_combined.pdf", width = 6, height = 5)
 # 
