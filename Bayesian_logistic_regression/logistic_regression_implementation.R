@@ -247,58 +247,198 @@ for (j in 1:d) {
 
 dev.off()
 
-# ---- PDF output ----
-pdf("HMC_acf_combined.pdf", width = 10, height = 12)
+pdf("HMC_acf_combined.pdf", width = 12, height = 5)
 
-# ---- Layout and margins ----
-par(mfrow = c(4, 2),
-    mar  = c(3.5, 4.5, 0.5, 0.5),
-    oma  = c(0.5, 0.5, 0.5, 0.5),
-    mgp  = c(2.2, 0.8, 0))
+# Same style as your Gaussian potential plot
+par(mfrow = c(1,2), mar = c(4,5,1,1), oma = c(0,0,0,0))
 
-# ---- Font sizes ----
-cex_lab  <- 2
-cex_axis <- 1.8
-lwd_line <- 2
+lag_max <- 100
+lags <- 0:lag_max
+p <- ncol(beta_samples)
 
-# ---- Lag length ----
-lag_max <- 1e2
+# --- LEFT PANEL: naive sampler (darkblue, dashed) ---
+# Compute first ACF to open the plot
+acf_naive <- acf(beta_warmup[,1], plot = FALSE, lag.max = lag_max)$acf
+ylim_all <- range(acf_naive)   # initialize range
 
-# ---- Plot ACF for each beta with warmup overlay ----
-for (j in seq_len(ncol(beta_samples))) {
-  
-  acf_main  <- acf(beta_samples[, j], plot = FALSE, lag.max = lag_max)
-  acf_warm  <- acf(beta_warmup[, j], plot = FALSE, lag.max = lag_max)
-  
-  lags      <- as.numeric(acf_main$lag)  # identical for both
-  acf_main_vals <- as.numeric(acf_main$acf)
-  acf_warm_vals <- as.numeric(acf_warm$acf)
-  
-  # combined y-limits
-  ylim_combined <- range(c(acf_main_vals, acf_warm_vals))
-  
-  # main chain ACF
-  plot(lags, acf_main_vals, type = "l", lwd = lwd_line, col = "darkred",
-       xlab = "Lag",
-       ylab = var_names[j],
-       cex.lab = cex_lab, cex.axis = cex_axis,
-       ylim = ylim_combined)
-  
-  # warmup ACF overlay (solid dark blue)
-  lines(lags, acf_warm_vals, lwd = lwd_line, col = "darkblue")
-  
-  abline(h = 0, lty = 3)
-  
-  legend("topright",
-         legend = c("pre-conditioned sampler", "naive sampler"),
-         col = c("darkred", "darkblue"),
-         lwd = lwd_line,
-         lty = 1,
-         bty = "n",
-         cex = 1.4)
+# Expand y-limits to include all components from both samplers
+for (j in seq_len(p)) {
+  ylim_all <- range(c(
+    ylim_all,
+    acf(beta_warmup[,j],  plot = FALSE, lag.max = lag_max)$acf,
+    acf(beta_samples[,j], plot = FALSE, lag.max = lag_max)$acf
+  ))
 }
 
+# Plot naive sampler ACF curves
+plot(lags, acf_naive, type = "l", lwd = 2, col = "darkblue", lty = 2,
+     xlab = "Lag", ylab = "ACF", las = 1,
+     cex.lab = 1.5, cex.axis = 1.2,
+     ylim = ylim_all)
+
+for (j in seq_len(p)) {
+  lines(lags,
+        acf(beta_warmup[,j], plot = FALSE, lag.max = lag_max)$acf,
+        col = "darkblue", lwd = 2, lty = 1)
+}
+
+legend("topright",
+       legend = c("naive sampler"),
+       col = "darkblue", lty = 1, lwd = 2, bty = "n", cex = 1.2)
+
+abline(h = 0, lty = 3)
+
+
+# --- RIGHT PANEL: preconditioned sampler (darkred, solid) ---
+acf_pre <- acf(beta_samples[,1], plot = FALSE, lag.max = lag_max)$acf
+
+plot(lags, acf_pre, type = "l", lwd = 2, col = "darkred", lty = 1,
+     xlab = "Lag", ylab = "ACF", las = 1,
+     cex.lab = 1.5, cex.axis = 1.2,
+     ylim = ylim_all)
+
+for (j in seq_len(p)) {
+  lines(lags,
+        acf(beta_samples[,j], plot = FALSE, lag.max = lag_max)$acf,
+        col = "darkred", lwd = 2, lty = 1)
+}
+
+legend("topright",
+       legend = c("preconditioned sampler"),
+       col = "darkred", lty = 1, lwd = 2, bty = "n", cex = 1.2)
+
+abline(h = 0, lty = 3)
+
 dev.off()
+
+
+
+
+
+
+# ---- Single combined ACF plot for all components (8 + 8 = 16) ----
+# pdf("HMC_acf_combined.pdf", width = 6, height = 5)
+# 
+# 
+# par(mfrow = c(1, 1),
+#     mar  = c(4.0, 5.0, 1.0, 0.5),
+#     oma  = c(0, 0, 0, 0),
+#     mgp  = c(2.2, 0.8, 0))
+# 
+# # font / line settings
+# cex_lab  <- 1.4
+# cex_axis <- 1.1
+# lwd_line <- 2
+# 
+# # lag
+# lag_max <- 100
+# lags <- 0:lag_max
+# 
+# # number of components
+# p <- ncol(beta_samples)
+# 
+# # allocate storage for ACF values (each column: one component, rows correspond to lags 0:lag_max)
+# acf_pre_mat  <- matrix(NA_real_, nrow = lag_max + 1, ncol = p)  # preconditioned (post-warmup) assumed in beta_samples
+# acf_naive_mat <- matrix(NA_real_, nrow = lag_max + 1, ncol = p) # naive / warmup assumed in beta_warmup
+# 
+# # compute ACFs (same lag grid)
+# for (j in seq_len(p)) {
+#   acf_pre  <- acf(beta_samples[, j],  plot = FALSE, lag.max = lag_max)$acf
+#   acf_naive <- acf(beta_warmup[, j], plot = FALSE, lag.max = lag_max)$acf
+#   
+#   # store: acf(...) returns an array, coerce to numeric vector
+#   acf_pre_mat[, j]   <- as.numeric(acf_pre)
+#   acf_naive_mat[, j] <- as.numeric(acf_naive)
+# }
+# 
+# # global y-limits across all 16 series
+# ylim_all <- range(c(acf_pre_mat, acf_naive_mat), na.rm = TRUE)
+# 
+# # base plot (use first preconditioned component to initialise the axes)
+# plot(lags, acf_pre_mat[, 1], type = "l", lwd = lwd_line, col = "darkred",
+#      xlab = "Lag", ylab = "Autocorrelation (ACF)",
+#      cex.lab = cex_lab, cex.axis = cex_axis,
+#      ylim = ylim_all, xlim = range(lags))
+# 
+# # add the remaining preconditioned (post-warmup) ACFs (solid darkred)
+# if (p > 1) {
+#   for (j in 2:p) {
+#     lines(lags, acf_pre_mat[, j], lwd = lwd_line, col = "darkred", lty = 1)
+#   }
+# }
+# 
+# # add all naive / warmup ACFs (dashed darkblue, lty = 2)
+# for (j in seq_len(p)) {
+#   lines(lags, acf_naive_mat[, j], lwd = lwd_line, col = "darkblue", lty = 2)
+# }
+# 
+# # reference zero line
+# abline(h = 0, lty = 3)
+# 
+# # legend
+# legend("topright",
+#        legend = c("preconditioned sampler", "naive sampler"),
+#        col    = c("darkred", "darkblue"),
+#        lwd    = c(lwd_line, lwd_line),
+#        lty    = c(1, 2),
+#        bty    = "n",
+#        cex    = 1.4)
+# 
+# dev.off()
+
+# 
+# # ---- PDF output ----
+# pdf("HMC_acf_combined.pdf", width = 10, height = 12)
+# 
+# # ---- Layout and margins ----
+# par(mfrow = c(4, 2),
+#     mar  = c(3.5, 4.5, 0.5, 0.5),
+#     oma  = c(0.5, 0.5, 0.5, 0.5),
+#     mgp  = c(2.2, 0.8, 0))
+# 
+# # ---- Font sizes ----
+# cex_lab  <- 2
+# cex_axis <- 1.8
+# lwd_line <- 2
+# 
+# # ---- Lag length ----
+# lag_max <- 1e2
+# 
+# # ---- Plot ACF for each beta with warmup overlay ----
+# for (j in seq_len(ncol(beta_samples))) {
+#   
+#   acf_main  <- acf(beta_samples[, j], plot = FALSE, lag.max = lag_max)
+#   acf_warm  <- acf(beta_warmup[, j], plot = FALSE, lag.max = lag_max)
+#   
+#   lags      <- as.numeric(acf_main$lag)  # identical for both
+#   acf_main_vals <- as.numeric(acf_main$acf)
+#   acf_warm_vals <- as.numeric(acf_warm$acf)
+#   
+#   # combined y-limits
+#   ylim_combined <- range(c(acf_main_vals, acf_warm_vals))
+#   
+#   # main chain ACF
+#   plot(lags, acf_main_vals, type = "l", lwd = lwd_line, col = "darkred",
+#        xlab = "Lag",
+#        ylab = var_names[j],
+#        cex.lab = cex_lab, cex.axis = cex_axis,
+#        ylim = ylim_combined)
+#   
+#   # warmup ACF overlay (solid dark blue)
+#   lines(lags, acf_warm_vals, lwd = lwd_line, col = "darkblue")
+#   
+#   abline(h = 0, lty = 3)
+#   
+#   legend("topright",
+#          legend = c("pre-conditioned sampler", "naive sampler"),
+#          col = c("darkred", "darkblue"),
+#          lwd = lwd_line,
+#          lty = 1,
+#          bty = "n",
+#          cex = 1.4)
+# }
+# 
+# dev.off()
 
 # 
 # # ---- PDF output ----
