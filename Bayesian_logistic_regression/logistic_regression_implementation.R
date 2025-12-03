@@ -249,8 +249,7 @@ dev.off()
 
 pdf("HMC_acf_combined.pdf", width = 12, height = 5)
 
-# Same style as your Gaussian potential plot
-par(mfrow = c(1,2), mar = c(4,5,1,1), oma = c(0,0,0,0))
+par(mfrow = c(1,2), mar = c(5,5,1,1), oma = c(0,0,0,0))
 
 lag_max <- 100
 lags <- 0:lag_max
