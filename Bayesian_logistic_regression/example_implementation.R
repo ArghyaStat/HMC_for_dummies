@@ -301,6 +301,89 @@ abline(h = 0, lty = 2)
 
 dev.off()
 
+########## Posterior summary table from pre-conditioned sampler ##########
+
+library(xtable)
+
+if (!exists("beta_samples")) stop("beta_samples not found in workspace. Load posterior_beta_samples.RData first.")
+# coerce to matrix
+beta_samples <- as.matrix(beta_samples)
+d <- ncol(beta_samples)
+
+
+if (is.null(var_names)) {
+  var_names <- if (!is.null(colnames(beta_samples))) colnames(beta_samples) else paste0("beta", seq_len(d))
+} else {
+  # ensure same length as d
+  if (length(var_names) == d) {
+    var_names <- var_names
+  } else if (length(var_names) > d) {
+    warning("Provided var_names longer than number of parameters in beta_samples. Truncating to first ", d, " names.")
+    var_names <- var_names[1:d]
+  } else { # shorter
+    warning("Provided var_names shorter than number of parameters in beta_samples. Using provided names for first ",
+            length(var_names), " and generating generic names for remaining.")
+    var_names <- c(var_names, paste0("beta", seq_len(d - length(var_names))))
+  }
+}
+
+# ---- Compute summaries (safe, base R) ----
+means  <- colMeans(beta_samples)
+sds    <- apply(beta_samples, 2, sd)
+lower2 <- apply(beta_samples, 2, quantile, probs = 0.025, names = FALSE)
+upper2 <- apply(beta_samples, 2, quantile, probs = 0.975, names = FALSE)
+
+# ---- Build tibble/data.frame (no size mismatch) ----
+posterior_summary <- data.frame(
+  Variable = var_names,
+  Mean = means,
+  SD = sds,
+  Lower = lower2,
+  Upper = upper2,
+  stringsAsFactors = FALSE
+)
+
+# ---- Format numeric columns for LaTeX (keep plain numeric columns too) ----
+# If you want \hphantom{0} alignment in the LaTeX output, we create a formatted text version.
+fmt_num_phantom0 <- function(x, digits = 3) {
+  sapply(x, function(v) {
+    if (is.na(v)) return("")
+    if (v >= 0) sprintf("\\hphantom{0}%.*f", digits, v) else sprintf("%.*f", digits, v)
+  }, USE.NAMES = FALSE)
+}
+
+# Formatted strings wrapped in $...$
+posterior_summary$Mean_fmt <- paste0("$", fmt_num_phantom0(posterior_summary$Mean, digits = 3), "$")
+posterior_summary$SD_fmt   <- paste0("$", fmt_num_phantom0(posterior_summary$SD, digits = 3), "$")
+posterior_summary$CI_fmt   <- paste0(
+  "$[",
+  fmt_num_phantom0(posterior_summary$Lower, digits = 3),
+  ",\\, ",
+  fmt_num_phantom0(posterior_summary$Upper, digits = 3),
+  "]$"
+)
+
+# ---- Final table to pass to xtable (keep formatted columns as character) ----
+tex_table <- data.frame(
+  Variable = posterior_summary$Variable,
+  `Posterior mean` = posterior_summary$Mean_fmt,
+  `Posterior sd`   = posterior_summary$SD_fmt,
+  `Posterior $95\\%$ CI` = posterior_summary$CI_fmt,
+  stringsAsFactors = FALSE
+)
+
+# ---- Create and print xtable (booktabs = FALSE as requested) ----
+xt <- xtable(tex_table,
+             caption = "Posterior summary (mean, SD, and 95\\% credible intervals) from HMC samples",
+             label = "tab:posterior_summary",
+             align = c("l", "l", "r", "r", "l"))
+
+print(xt,
+      include.rownames = FALSE,
+      sanitize.text.function = identity, 
+      comment = FALSE,
+      booktabs = FALSE)
+
 
 
 # legend("topright",
@@ -469,86 +552,3 @@ dev.off()
 # }
 # 
 # dev.off()
-
-########## Posterior summary table from pre-conditioned sampler ##########
-
-library(xtable)
-
-if (!exists("beta_samples")) stop("beta_samples not found in workspace. Load posterior_beta_samples.RData first.")
-# coerce to matrix
-beta_samples <- as.matrix(beta_samples)
-d <- ncol(beta_samples)
-
-
-if (is.null(var_names)) {
-  var_names <- if (!is.null(colnames(beta_samples))) colnames(beta_samples) else paste0("beta", seq_len(d))
-} else {
-  # ensure same length as d
-  if (length(var_names) == d) {
-    var_names <- var_names
-  } else if (length(var_names) > d) {
-    warning("Provided var_names longer than number of parameters in beta_samples. Truncating to first ", d, " names.")
-    var_names <- var_names[1:d]
-  } else { # shorter
-    warning("Provided var_names shorter than number of parameters in beta_samples. Using provided names for first ",
-            length(var_names), " and generating generic names for remaining.")
-    var_names <- c(var_names, paste0("beta", seq_len(d - length(var_names))))
-  }
-}
-
-# ---- Compute summaries (safe, base R) ----
-means  <- colMeans(beta_samples)
-sds    <- apply(beta_samples, 2, sd)
-lower2 <- apply(beta_samples, 2, quantile, probs = 0.025, names = FALSE)
-upper2 <- apply(beta_samples, 2, quantile, probs = 0.975, names = FALSE)
-
-# ---- Build tibble/data.frame (no size mismatch) ----
-posterior_summary <- data.frame(
-  Variable = var_names,
-  Mean = means,
-  SD = sds,
-  Lower = lower2,
-  Upper = upper2,
-  stringsAsFactors = FALSE
-)
-
-# ---- Format numeric columns for LaTeX (keep plain numeric columns too) ----
-# If you want \hphantom{0} alignment in the LaTeX output, we create a formatted text version.
-fmt_num_phantom0 <- function(x, digits = 3) {
-  sapply(x, function(v) {
-    if (is.na(v)) return("")
-    if (v >= 0) sprintf("\\hphantom{0}%.*f", digits, v) else sprintf("%.*f", digits, v)
-  }, USE.NAMES = FALSE)
-}
-
-# Formatted strings wrapped in $...$
-posterior_summary$Mean_fmt <- paste0("$", fmt_num_phantom0(posterior_summary$Mean, digits = 3), "$")
-posterior_summary$SD_fmt   <- paste0("$", fmt_num_phantom0(posterior_summary$SD, digits = 3), "$")
-posterior_summary$CI_fmt   <- paste0(
-  "$[",
-  fmt_num_phantom0(posterior_summary$Lower, digits = 3),
-  ",\\, ",
-  fmt_num_phantom0(posterior_summary$Upper, digits = 3),
-  "]$"
-)
-
-# ---- Final table to pass to xtable (keep formatted columns as character) ----
-tex_table <- data.frame(
-  Variable = posterior_summary$Variable,
-  `Posterior mean` = posterior_summary$Mean_fmt,
-  `Posterior sd`   = posterior_summary$SD_fmt,
-  `Posterior $95\\%$ CI` = posterior_summary$CI_fmt,
-  stringsAsFactors = FALSE
-)
-
-# ---- Create and print xtable (booktabs = FALSE as requested) ----
-xt <- xtable(tex_table,
-             caption = "Posterior summary (mean, SD, and 95\\% credible intervals) from HMC samples",
-             label = "tab:posterior_summary",
-             align = c("l", "l", "r", "r", "l"))
-
-print(xt,
-      include.rownames = FALSE,
-      sanitize.text.function = identity, # keep LaTeX markup
-      comment = FALSE,
-      booktabs = FALSE)
