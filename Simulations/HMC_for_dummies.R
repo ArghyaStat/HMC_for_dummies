@@ -138,6 +138,10 @@ normal_idealHMC <- function(s = 1, n = 1e4)
 }
 
 
+# transparent colors
+col_blue   <- adjustcolor("blue",   alpha.f = 0.5)
+col_red    <- adjustcolor("red",    alpha.f = 0.5)
+col_orange <- adjustcolor("orange", alpha.f = 0.5)
 
 
 chain1 <- normal_idealHMC(s = .1)
@@ -160,19 +164,19 @@ x <- seq(-3, 3, length = 1e3)
 plot(x, dnorm(x), type = "l", lwd = 2,
      ylab = expression(Density~pi(x)), xlab = expression(Position~(x)),
      cex.lab = cex_lab, cex.axis = cex_axis)
-lines(density(chain3), col = "orange", lwd = 2)
-lines(density(chain2), col = "red",    lwd = 2)
-lines(density(chain1), col = "blue",   lwd = 2)
+lines(density(chain1), col = col_blue,   lwd = 2)
+lines(density(chain2), col = col_red,    lwd = 2)
+lines(density(chain3), col = col_orange, lwd = 2)
 legend("topright",
-       col = c("black", "orange", "red", "blue"),
+       col = c("black", col_orange, col_red, col_blue),
        legend = c("Truth", "s = 5", "s = 1", "s = .1"),
        lty = 1, cex = 2.2, bty = "n")
 
 ## (2) Trace plot: suppress axes/labels and add them manually with cex
-plot.ts(chain3, col = "orange", lwd = 2, ylim = c(-4, 6),
+plot.ts(chain1, col = col_blue, lwd = 2, ylim = c(-4, 6),
         axes = FALSE, ann = FALSE,  cex.lab = cex_lab)   # suppress default axes and labels
-lines(chain2, col = "red",  lwd = 2)
-lines(chain1, col = "blue", lwd = 2)
+lines(chain2, col = col_red,  lwd = 2)
+lines(chain3, col = col_orange, lwd = 2)
 # add axes with explicit cex.axis
 axis(1, cex.axis = cex_axis)   # x-axis
 axis(2, cex.axis = cex_axis)   # y-axis
@@ -181,7 +185,7 @@ box()
 mtext(expression(Iterations), side = 1, line = 2.8, cex = 1.2)
 mtext(expression("Trace plot"), side = 2, line = 3.5, cex = 1.2)
 legend("topright",
-       col = c("orange", "red", "blue"),
+       col = c(col_orange, col_red, col_blue),
        legend = c("s = 5", "s = 1", "s = .1"),
        lty = 1, cex = 2, bty = "n")
 
@@ -195,12 +199,12 @@ acf3 <- acf(chain3, plot = FALSE, lag.max = lagmax)
 lags <- as.numeric(acf1$lag)
 
 # plot first series (no axes)
-plot(lags, as.numeric(acf1$acf), type = "l", lwd = 2, col = "blue",
+plot(lags, as.numeric(acf3$acf), type = "l", lwd = 2, col = col_orange,
      ylim = c(min(c(acf1$acf, acf2$acf, acf3$acf)),
               max(c(acf1$acf, acf2$acf, acf3$acf))),
      axes = FALSE, xlab = "", ylab = "", cex.lab = 1.2)
-lines(lags, as.numeric(acf2$acf), col = "red",    lwd = 2)
-lines(lags, as.numeric(acf3$acf), col = "orange", lwd = 2)
+lines(lags, as.numeric(acf2$acf), col = col_red,    lwd = 2)
+lines(lags, as.numeric(acf1$acf), col = col_blue, lwd = 2)
 
 # add axes with explicit sizes
 axis(1, cex.axis = cex_axis)
@@ -210,7 +214,7 @@ mtext("Lag", side = 1, line = 2.8, cex = 1.2)
 mtext("ACF", side = 2, line = 3.5, cex = 1.2)
 
 legend("topright",
-       col = c("orange", "red", "blue"),
+       col = c(col_orange, col_red, col_blue),
        legend = c("s = 5", "s = 1", "s = .1"),
        lty = 1, cex = 2, bty = "n")
 
@@ -228,18 +232,18 @@ plot(x, dnorm(x), type = 'l',  lwd = 2,
      xlab = expression(Position~(x)), las = 1,
      cex.lab = 1.5,    # enlarge axis labels
      cex.axis = 1.2)
-lines(density(chain3),  lwd = 2, col = "orange")
-lines(density(chain2),  lwd = 2, col = "red")
-lines(density(chain1),  lwd = 2, col = "blue")
+lines(density(chain1),  lwd = 2, col = col_blue)
+lines(density(chain2),  lwd = 2, col = col_red)
+lines(density(chain3),  lwd = 2, col = col_orange)
 legend("topright",
-       col = c("black", "orange", "red", "blue"),
+       col = c("black", col_orange, col_red, col_blue),
        legend = c("Truth", "s = 5", "s = 1", "s = .1"), lty = 1)
 
-plot.ts(chain3, col = "orange", ylab = "Trace Plot", ylim = c(-4, 6))
-lines(chain2, col = "red")
-lines(chain1, col = "blue")
+plot.ts(chain1, col = col_blue, ylab = "Trace Plot", ylim = c(-4, 6))
+lines(chain2, col = col_red)
+lines(chain3, col = col_orange)
 legend("topright",
-       col = c("orange", "red", "blue"),
+       col = c(col_orange, col_red, col_blue),
        legend = c("s = 5", "s = 1", "s = .1"),
        lty = 1)
 
@@ -547,11 +551,11 @@ x <- seq(-3, 3, length = 1e3)
 plot(x, dnorm(x), type = "l", lwd = 2,
      ylab = expression(Density~pi(x)), xlab = expression(Position~(x)),
      cex.lab = 2.2, cex.axis = 1.8)
-lines(density(chain3), col = "orange", lwd = 2)
-lines(density(chain2), col = "red",    lwd = 2)
-lines(density(chain1), col = "blue",   lwd = 2)
+lines(density(chain1), col = col_blue,   lwd = 2)
+lines(density(chain2), col = col_red,    lwd = 2)
+lines(density(chain3), col = col_orange, lwd = 2)
 legend("topright",
-       col = c("black", "orange", "red", "blue"),
+       col = c("black", col_orange, col_red, col_blue),
        legend = c("Truth", 
                   expression(epsilon == 0.01),
                   expression(epsilon == 1),
@@ -559,17 +563,17 @@ legend("topright",
        lty = 1, cex = 2.2, bty = "n")
 
 ## (2) Trace plot
-plot.ts(chain3, col = "orange", lwd = 2, ylim = c(-4, 6),
+plot.ts(chain1, col = col_blue, lwd = 2, ylim = c(-4, 6),
         axes = FALSE, ann = FALSE)
-lines(chain2, col = "red",  lwd = 2)
-lines(chain1, col = "blue", lwd = 2)
+lines(chain2, col = col_red,  lwd = 2)
+lines(chain3, col = col_orange, lwd = 2)
 axis(1, cex.axis = cex_axis)
 axis(2, cex.axis = cex_axis)
 box()
 mtext(expression(Iterations), side = 1, line = 2.8, cex = cex_lab)
 mtext("Trace plot", side = 2, line = 3.5, cex = cex_lab)
 legend("topright",
-       col = c("orange", "red", "blue"),
+       col = c(col_orange, col_red, col_blue),
        legend = c(expression(epsilon == 0.01),
                   expression(epsilon == 1),
                   expression(epsilon == 0.1)),
@@ -582,19 +586,19 @@ acf2 <- acf(chain2, plot = FALSE, lag.max = lagmax)
 acf3 <- acf(chain3, plot = FALSE, lag.max = lagmax)
 lags <- as.numeric(acf1$lag)
 
-plot(lags, as.numeric(acf1$acf), type = "l", lwd = 2, col = "blue",
+plot(lags, as.numeric(acf1$acf), type = "l", lwd = 2, col = col_blue,
      ylim = c(min(c(acf1$acf, acf2$acf, acf3$acf)),
               max(c(acf1$acf, acf2$acf, acf3$acf))),
      axes = FALSE, xlab = "", ylab = "")
-lines(lags, as.numeric(acf2$acf), col = "red", lwd = 2)
-lines(lags, as.numeric(acf3$acf), col = "orange", lwd = 2)
+lines(lags, as.numeric(acf2$acf), col = col_red, lwd = 2)
+lines(lags, as.numeric(acf3$acf), col = col_orange, lwd = 2)
 axis(1, cex.axis = cex_axis)
 axis(2, cex.axis = cex_axis)
 box()
 mtext("Lag", side = 1, line = 2.8, cex = cex_lab)
 mtext("ACF", side = 2, line = 3.5, cex = cex_lab)
 legend("topright",
-       col = c("orange", "red", "blue"),
+       col = c(col_orange, col_red, col_blue),
        legend = c(expression(epsilon == 0.01),
                   expression(epsilon == 1),
                   expression(epsilon == 0.1)),
@@ -603,9 +607,9 @@ legend("topright",
 dev.off()
 
 # Keeping L * epsilon = 10
-chain1 <- normalLF_HMC(L = 100, eps = .1)
-chain2 <- normalLF_HMC(L = 10,  eps = 1)
-chain3 <- normalLF_HMC(L = 1,   eps = 10)
+chain1 <- normal_HMC(L = 100, eps = .1)
+chain2 <- normal_HMC(L = 10,  eps = 1)
+chain3 <- normal_HMC(L = 1,   eps = 10)
 
 ########## Leapfrog with s = 10 #########
 pdf("lfd_with_s10.pdf", width = 16, height = 5)
@@ -623,11 +627,11 @@ x <- seq(-3, 3, length = 1e3)
 plot(x, dnorm(x), type = "l", lwd = 2,
      ylab = expression(Density~pi(x)), xlab = expression(Position~(x)),
      cex.lab = 2.2, cex.axis = 1.8)
-lines(density(chain3), col = "orange", lwd = 2)
-lines(density(chain2), col = "red",    lwd = 2)
-lines(density(chain1), col = "blue",   lwd = 2)
+lines(density(chain1), col = col_blue,   lwd = 2)
+lines(density(chain2), col = col_red,    lwd = 2)
+lines(density(chain3), col = col_orange, lwd = 2)
 legend("topright",
-       col = c("black", "orange", "red", "blue"),
+       col = c("black", col_orange, col_red, col_blue),
        legend = c("Truth",
                   expression(epsilon == 10),
                   expression(epsilon == 1),
@@ -635,17 +639,17 @@ legend("topright",
        lty = 1, cex = 2.2, bty = "n")
 
 ## (2) Trace plot
-plot.ts(chain3, col = "orange", lwd = 2, ylim = c(-4, 6),
+plot.ts(chain1, col = col_blue, lwd = 2, ylim = c(-4, 6),
         axes = FALSE, ann = FALSE)
-lines(chain2, col = "red",  lwd = 2)
-lines(chain1, col = "blue", lwd = 2)
+lines(chain2, col = col_red,  lwd = 2)
+lines(chain3, col = col_orange, lwd = 2)
 axis(1, cex.axis = cex_axis)
 axis(2, cex.axis = cex_axis)
 box()
 mtext(expression(Iterations), side = 1, line = 2.8, cex = cex_lab)
 mtext("Trace plot", side = 2, line = 3.5, cex = cex_lab)
 legend("topright",
-       col = c("orange", "red", "blue"),
+       col = c(col_orange, col_red, col_blue),
        legend = c(expression(epsilon == 10),
                   expression(epsilon == 1),
                   expression(epsilon == 0.1)),
@@ -658,19 +662,19 @@ acf2 <- acf(chain2, plot = FALSE, lag.max = lagmax)
 acf3 <- acf(chain3, plot = FALSE, lag.max = lagmax)
 lags <- as.numeric(acf1$lag)
 
-plot(lags, as.numeric(acf1$acf), type = "l", lwd = 2, col = "blue",
+plot(lags, as.numeric(acf1$acf), type = "l", lwd = 2, col = col_blue,
      ylim = c(min(c(acf1$acf, acf2$acf, acf3$acf)),
               max(c(acf1$acf, acf2$acf, acf3$acf))),
      axes = FALSE, xlab = "", ylab = "")
-lines(lags, as.numeric(acf2$acf), col = "red", lwd = 2)
-lines(lags, as.numeric(acf3$acf), col = "orange", lwd = 2)
+lines(lags, as.numeric(acf2$acf), col = col_red, lwd = 2)
+lines(lags, as.numeric(acf3$acf), col = col_orange, lwd = 2)
 axis(1, cex.axis = cex_axis)
 axis(2, cex.axis = cex_axis)
 box()
 mtext("Lag", side = 1, line = 2.8, cex = cex_lab)
 mtext("ACF", side = 2, line = 3.5, cex = cex_lab)
 legend("topright",
-       col = c("orange", "red", "blue"),
+       col = c(col_orange, col_red, col_blue),
        legend = c(expression(epsilon == 10),
                   expression(epsilon == 1),
                   expression(epsilon == 0.1)),
@@ -692,9 +696,9 @@ cat("Quarter period L =", L_quarter, "\n")
 
 ########## Run HMC Chains ##########
 
-chain_full    <- normalLF_HMC(L = L_full,    eps = eps)
-chain_half    <- normalLF_HMC(L = L_half,    eps = eps)
-chain_quarter <- normalLF_HMC(L = L_quarter, eps = eps)
+chain_full    <- normal_HMC(L = L_full,    eps = eps)
+chain_half    <- normal_HMC(L = L_half,    eps = eps)
+chain_quarter <- normal_HMC(L = L_quarter, eps = eps)
 
 ########## Plot: Density, Trace, ACF ##########
 
@@ -714,12 +718,12 @@ plot(x, dnorm(x), type = "l", lwd = 2,
      xlab = expression(Position~(x)),
      cex.lab = 2.2, cex.axis = 1.8)
 
-lines(density(chain_quarter), col = "orange", lwd = 2)
-lines(density(chain_half),    col = "red",    lwd = 2)
-lines(density(chain_full),    col = "blue",   lwd = 2)
+lines(density(chain_quarter), col = col_orange, lwd = 2)
+lines(density(chain_half),    col = col_red,    lwd = 2)
+lines(density(chain_full),    col = col_blue,   lwd = 2)
 
 legend("topright",
-       col = c("black", "orange", "red", "blue"),
+       col = c("black", col_orange, col_red, col_blue),
        legend = c("Truth",
                   "Quarter period",
                   "Half period",
@@ -727,11 +731,11 @@ legend("topright",
        lty = 1, cex = 2.2, bty = "n")
 
 ### (2) Trace plot
-plot.ts(chain_quarter, col = "orange", lwd = 2,
+plot.ts(chain_full, col = col_blue, lwd = 2,
         ylim = range(c(chain_quarter, chain_half, chain_full)),
         axes = FALSE, ann = FALSE)
-lines(chain_half, col = "red",  lwd = 2)
-lines(chain_full, col = "blue", lwd = 2)
+lines(chain_half, col = col_red,  lwd = 2)
+lines(chain_quarter, col = col_orange, lwd = 2)
 
 axis(1, cex.axis = cex_axis)
 axis(2, cex.axis = cex_axis)
@@ -741,7 +745,7 @@ mtext(expression(Iterations), side = 1, line = 2.8, cex = cex_lab)
 mtext("Trace plot",          side = 2, line = 3.5, cex = cex_lab)
 
 legend("topright",
-       col = c("orange", "red", "blue"),
+       col = c(col_orange, col_red, col_blue),
        legend = c("Quarter period",
                   "Half period",
                   "Full period"),
@@ -755,12 +759,12 @@ acf_quarter <- acf(chain_quarter, plot = FALSE, lag.max = lagmax)
 
 lags <- as.numeric(acf_full$lag)
 
-plot(lags, as.numeric(acf_full$acf), type = "l", lwd = 2, col = "blue",
+plot(lags, as.numeric(acf_full$acf), type = "l", lwd = 2, col = col_blue,
      ylim = range(c(acf_full$acf, acf_half$acf, acf_quarter$acf)),
      axes = FALSE, xlab = "", ylab = "")
 
-lines(lags, as.numeric(acf_half$acf),    col = "red",    lwd = 2)
-lines(lags, as.numeric(acf_quarter$acf), col = "orange", lwd = 2)
+lines(lags, as.numeric(acf_half$acf),    col = col_red,    lwd = 2)
+lines(lags, as.numeric(acf_quarter$acf), col = col_orange, lwd = 2)
 
 axis(1, cex.axis = cex_axis)
 axis(2, cex.axis = cex_axis)
@@ -770,7 +774,7 @@ mtext("Lag", side = 1, line = 2.8, cex = cex_lab)
 mtext("ACF", side = 2, line = 3.5, cex = cex_lab)
 
 legend("topright",
-       col = c("orange", "red", "blue"),
+       col = c(col_orange, col_red, col_blue),
        legend = c("Quarter period",
                   "Half period",
                   "Full period"),
