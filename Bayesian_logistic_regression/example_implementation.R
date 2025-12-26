@@ -330,8 +330,8 @@ if (is.null(var_names)) {
 # ---- Compute summaries (safe, base R) ----
 means  <- colMeans(beta_samples)
 sds    <- apply(beta_samples, 2, sd)
-lower2 <- apply(beta_samples, 2, quantile, probs = 0.025, names = FALSE)
-upper2 <- apply(beta_samples, 2, quantile, probs = 0.975, names = FALSE)
+lower2 <- apply(beta_samples, 2, quantile, probs = 0.05, names = FALSE)
+upper2 <- apply(beta_samples, 2, quantile, probs = 0.95, names = FALSE)
 
 # ---- Build tibble/data.frame (no size mismatch) ----
 posterior_summary <- data.frame(
@@ -363,7 +363,7 @@ posterior_summary$CI_fmt   <- paste0(
   "]$"
 )
 
-# ---- Final table to pass to xtable (keep formatted columns as character) ----
+# ---- Final table to pass to xtable ----
 tex_table <- data.frame(
   Variable = posterior_summary$Variable,
   `Posterior mean` = posterior_summary$Mean_fmt,
@@ -372,9 +372,9 @@ tex_table <- data.frame(
   stringsAsFactors = FALSE
 )
 
-# ---- Create and print xtable (booktabs = FALSE as requested) ----
+# ---- Create and print xtable ----
 xt <- xtable(tex_table,
-             caption = "Posterior summary (mean, SD, and 95\\% credible intervals) from HMC samples",
+             caption = "Posterior summary (mean, SD, and 90\\% credible intervals) from HMC samples",
              label = "tab:posterior_summary",
              align = c("l", "l", "r", "r", "l"))
 
