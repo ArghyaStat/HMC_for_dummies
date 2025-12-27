@@ -129,8 +129,8 @@ load("posterior_beta_warmup.RData")
 
 # --- HMC parameters ---
 niters <- 1e5
-#epsilon <- 1.1 # tuning for full pre-conditioning
-epsilon <- 0.11 # tuning for diagonal pre-conditioning
+#epsilon <- 1.1 # tuning for full precision matrix M pre-conditioning
+epsilon <- 0.11 # tuning for diagonal M pre-conditioning
 L <- 20
 M <- diag(1/diag(cov(beta_warmup))) # diagonal preconditiong
 # solve(cov(beta_warmup))  ## full preconditioning
@@ -160,8 +160,6 @@ save(beta_samples, accept_main, file = "posterior_beta_samples.RData")
 
 load("posterior_beta_samples.RData")   
 
-# beta_samples <- beta_warmup
-# niters <- warmup
 
 var_names <- c("Intercept", "pregnant", "glucose", "pressure",
                "triceps", "mass", "pedigree", "age")
@@ -170,9 +168,89 @@ library(SimTools)
 library(MASS)
 
 k <- 1e4
+
+#### Naive sampler visualization ####
+
+# ---- Subset last k samples ----
+warmup_lastk <- tail(beta_warmup, k)
+
+# ---- Create one list per column ----
+warmup_lists <- lapply(1:d, function(j) warmup_lastk[, j])
+names(warmup_lists) <- var_names
+
+# ---- Convert each column to an Smcmc object ----
+Smcmc_warmup <- lapply(warmup_lists, Smcmc)
+
+cex_lab  <- 2
+cex_axis <- 1.8
+
+# ---- PDF output ----
+pdf("warmup_density_plots.pdf", width = 10, height = 12)
+
+# ---- Layout and margins ----
+par(mfrow = c(4, 2),                      # 8 panels → 4 rows × 2 columns
+    mar  = c(3.5, 4.5, 0.8, 0.8),         # margins: bottom, left, top, right
+    oma  = c(0.5, 0.5, 0.5, 0.5),
+    mgp  = c(2.2, 0.8, 0))                # axis label spacing
+
+# ---- Generate density plots ----
+for (j in 1:d) {
+  smcmc_obj <- Smcmc_warmup[[j]]
+  dens <- density(smcmc_obj$stacked)
+  
+  plot(dens,
+       main = "",
+       xlab = var_names[j],
+       ylab = "Density",
+       cex.lab = cex_lab, cex.axis = cex_axis)
+  
+  # Add 90% credible interval
+  CIs <- getCI(smcmc_obj, Q = c(0.05, 0.95))
+  addCI(smcmc_obj, CIs, component = 1)
+}
+
+dev.off()
+
+# ---- PDF output ----
+pdf("warmup_trace_plots.pdf", width = 10, height = 12)
+
+# ---- Layout and margins ----
+par(mfrow = c(4, 2),
+    mar  = c(3.5, 4.5, 1.2, 0.8),
+    oma  = c(0.5, 0.5, 0.5, 0.5),
+    mgp  = c(2.2, 0.8, 0))
+
+# ---- Font sizes ----
+cex_lab  <- 2
+cex_axis <- 1.8
+lwd_line <- 1.5
+
+# ---- Plot trace for each beta ----
+for (j in 1:d) {
+  beta_j <- warmup_lastk[, j]
+  mean_j <- mean(warmup_lastk[, j])
+  
+  plot((warmup - k + 1):warmup, beta_j, type = "l", lwd = lwd_line,
+       col = "darkorange", bty = "l",
+       xlab = "Iterations", ylab = var_names[j],
+       cex.lab = cex_lab, cex.axis = cex_axis)
+  
+  abline(h = mean(beta_warmup[, j]), col = "firebrick", lwd = 2, lty = 2)
+  
+  legend("topright",
+         legend = c("Post.mean"),
+         col = "firebrick", lty = 2, lwd = 2,
+         bty = "n", cex = 1.4)
+  
+  
+}
+
+dev.off()
+
+#### Pre-conditioning sampler visualization ####
+
 # ---- Subset last k samples ----
 samples_lastk <- tail(beta_samples, k)
-dim(samples_lastk)
 
 # ---- Create one list per column ----
 hmc_lists <- lapply(1:d, function(j) samples_lastk[, j])
@@ -189,7 +267,7 @@ pdf("SimTools_density_plots.pdf", width = 10, height = 12)
 
 # ---- Layout and margins ----
 par(mfrow = c(4, 2),                      # 8 panels → 4 rows × 2 columns
-    mar  = c(3.5, 4.5, 0.5, 0.5),         # margins: bottom, left, top, right
+    mar  = c(3.5, 4.5, 0.8, 0.8),         # margins: bottom, left, top, right
     oma  = c(0.5, 0.5, 0.5, 0.5),
     mgp  = c(2.2, 0.8, 0))                # axis label spacing
 
@@ -216,7 +294,7 @@ pdf("HMC_trace_plots.pdf", width = 10, height = 12)
 
 # ---- Layout and margins ----
 par(mfrow = c(4, 2),
-    mar  = c(3.5, 4.5, 1.2, 0.5),
+    mar  = c(3.5, 4.5, 1.2, 0.8),
     oma  = c(0.5, 0.5, 0.5, 0.5),
     mgp  = c(2.2, 0.8, 0))
 
