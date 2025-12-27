@@ -247,60 +247,6 @@ for (j in 1:d) {
 
 dev.off()
 
-pdf("HMC_acf_combined.pdf", width = 12, height = 5)
-
-par(mfrow = c(1,2), mar = c(5,5,1,1), oma = c(0,0,0,0))
-
-lag_max <- 100
-lags <- 0:lag_max
-p <- ncol(beta_samples)
-
-
-acf_naive <- acf(beta_warmup[,1], plot = FALSE, lag.max = lag_max)$acf
-ylim_all <- range(acf_naive)  
-
-for (j in seq_len(p)) {
-  ylim_all <- range(c(
-    ylim_all,
-    acf(beta_warmup[,j],  plot = FALSE, lag.max = lag_max)$acf,
-    acf(beta_samples[,j], plot = FALSE, lag.max = lag_max)$acf
-  ))
-}
-
-
-plot(lags, acf_naive, type = "l", lwd = 2, col = "darkblue", lty = 2,
-     xlab = "Lag", ylab = "ACF", las = 1,
-     cex.lab = 1.5, cex.axis = 1.2,
-     ylim = ylim_all)
-
-for (j in seq_len(p)) {
-  lines(lags,
-        acf(beta_warmup[,j], plot = FALSE, lag.max = lag_max)$acf,
-        col = "darkblue", lwd = 2, lty = 1)
-}
-
-
-abline(h = 0, lty = 2)
-
-
-acf_pre <- acf(beta_samples[,1], plot = FALSE, lag.max = lag_max)$acf
-
-plot(lags, acf_pre, type = "l", lwd = 2, col = "darkred", lty = 1,
-     xlab = "Lag", ylab = "ACF", las = 1,
-     cex.lab = 1.5, cex.axis = 1.2,
-     ylim = ylim_all)
-
-for (j in seq_len(p)) {
-  lines(lags,
-        acf(beta_samples[,j], plot = FALSE, lag.max = lag_max)$acf,
-        col = "darkred", lwd = 2, lty = 1)
-}
-
-
-abline(h = 0, lty = 2)
-
-dev.off()
-
 ########## Posterior summary table from pre-conditioned sampler ##########
 
 library(xtable)

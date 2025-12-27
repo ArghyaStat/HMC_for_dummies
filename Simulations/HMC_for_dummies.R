@@ -1,7 +1,10 @@
+rm(list = ls())
+
 mydir <- this.path::here()
 setwd(mydir)
 set.seed(1)
 
+# Figure 1 in Section 3
 pdf("gaussian_potential.pdf", width = 12, height = 5)
 
 x <- seq(-3, 3, length = 5e2)
@@ -28,6 +31,7 @@ points(x = -2, y = -dnorm(-2, log = TRUE), pch = 16, col = "blue", cex = 1.3)
 dev.off()
 
 ### Hamiltonian dynamics illustration
+# Figure 2 in Section 3
 
 pdf("hamiltnoian_dynamics1.pdf", width = 12, height = 5)
 
@@ -67,7 +71,7 @@ points(x = x[101], y = -dnorm(x[101], log = TRUE), pch = 16, col = "blue", cex =
 text(x[101] + .6, -dnorm(x[101], log = TRUE), "t = 2")
 dev.off()
 
-
+# Figure 3 in Section 3
 pdf("hamiltnoian_dynamics2.pdf", width = 12, height = 5)
 
 # Adjust margins and font sizes
@@ -138,16 +142,11 @@ normal_idealHMC <- function(s = 1, n = 1e4)
 }
 
 
-# transparent colors
-col_blue   <- adjustcolor("blue",   alpha.f = 0.5)
-col_red    <- adjustcolor("red",    alpha.f = 0.5)
-col_orange <- adjustcolor("orange", alpha.f = 0.5)
-
-
 chain1 <- normal_idealHMC(s = .1)
 chain2 <- normal_idealHMC(s = 1)
 chain3 <- normal_idealHMC(s = 5)
 
+# Figure 4 in Section 3
 pdf("exact_normal1.pdf", width = 16, height = 5)
 
 # layout and base margins
@@ -164,19 +163,19 @@ x <- seq(-3, 3, length = 1e3)
 plot(x, dnorm(x), type = "l", lwd = 2,
      ylab = expression(Density~pi(x)), xlab = expression(Position~(x)),
      cex.lab = cex_lab, cex.axis = cex_axis)
-lines(density(chain1), col = col_blue,   lwd = 2)
-lines(density(chain2), col = col_red,    lwd = 2)
-lines(density(chain3), col = col_orange, lwd = 2)
+lines(density(chain1), col = "blue",   lwd = 2)
+lines(density(chain2), col = "red",    lwd = 2)
+lines(density(chain3), col = "orange", lwd = 2)
 legend("topright",
-       col = c("black", col_orange, col_red, col_blue),
+       col = c("black", "orange", "red", "blue"),
        legend = c("Truth", "s = 5", "s = 1", "s = .1"),
        lty = 1, cex = 2.2, bty = "n")
 
 ## (2) Trace plot: suppress axes/labels and add them manually with cex
-plot.ts(chain1, col = col_blue, lwd = 2, ylim = c(-4, 6),
+plot.ts(chain1, col = "blue", lwd = 2, ylim = c(-4, 6),
         axes = FALSE, ann = FALSE,  cex.lab = cex_lab)   # suppress default axes and labels
-lines(chain2, col = col_red,  lwd = 2)
-lines(chain3, col = col_orange, lwd = 2)
+lines(chain2, col = "red",  lwd = 2)
+lines(chain3, col = "orange", lwd = 2)
 # add axes with explicit cex.axis
 axis(1, cex.axis = cex_axis)   # x-axis
 axis(2, cex.axis = cex_axis)   # y-axis
@@ -185,7 +184,7 @@ box()
 mtext(expression(Iterations), side = 1, line = 2.8, cex = 1.2)
 mtext(expression("Trace plot"), side = 2, line = 3.5, cex = 1.2)
 legend("topright",
-       col = c(col_orange, col_red, col_blue),
+       col = c("orange", "red", "blue"),
        legend = c("s = 5", "s = 1", "s = .1"),
        lty = 1, cex = 2, bty = "n")
 
@@ -199,12 +198,12 @@ acf3 <- acf(chain3, plot = FALSE, lag.max = lagmax)
 lags <- as.numeric(acf1$lag)
 
 # plot first series (no axes)
-plot(lags, as.numeric(acf3$acf), type = "l", lwd = 2, col = col_orange,
+plot(lags, as.numeric(acf3$acf), type = "l", lwd = 2, col = "orange",
      ylim = c(min(c(acf1$acf, acf2$acf, acf3$acf)),
               max(c(acf1$acf, acf2$acf, acf3$acf))),
      axes = FALSE, xlab = "", ylab = "", cex.lab = 1.2)
-lines(lags, as.numeric(acf2$acf), col = col_red,    lwd = 2)
-lines(lags, as.numeric(acf1$acf), col = col_blue, lwd = 2)
+lines(lags, as.numeric(acf2$acf), col = "red",    lwd = 2)
+lines(lags, as.numeric(acf1$acf), col = "blue", lwd = 2)
 
 # add axes with explicit sizes
 axis(1, cex.axis = cex_axis)
@@ -214,162 +213,14 @@ mtext("Lag", side = 1, line = 2.8, cex = 1.2)
 mtext("ACF", side = 2, line = 3.5, cex = 1.2)
 
 legend("topright",
-       col = c(col_orange, col_red, col_blue),
+       col = c("orange", "red", "blue"),
        legend = c("s = 5", "s = 1", "s = .1"),
        lty = 1, cex = 2, bty = "n")
 
 dev.off()
 
-
-
-#### Leaf-frog discretization with different s
-
-pdf("lfd_with_diff_s.pdf", width = 12, height = 5)
-par(mfrow = c(1,2))
-x <- seq(-3, 3, length = 1e3)
-plot(x, dnorm(x), type = 'l',  lwd = 2,
-     ylab = expression(Density~pi(x)),   # ← formula now rendered
-     xlab = expression(Position~(x)), las = 1,
-     cex.lab = 1.5,    # enlarge axis labels
-     cex.axis = 1.2)
-lines(density(chain1),  lwd = 2, col = col_blue)
-lines(density(chain2),  lwd = 2, col = col_red)
-lines(density(chain3),  lwd = 2, col = col_orange)
-legend("topright",
-       col = c("black", col_orange, col_red, col_blue),
-       legend = c("Truth", "s = 5", "s = 1", "s = .1"), lty = 1)
-
-plot.ts(chain1, col = col_blue, ylab = "Trace Plot", ylim = c(-4, 6))
-lines(chain2, col = col_red)
-lines(chain3, col = col_orange)
-legend("topright",
-       col = c(col_orange, col_red, col_blue),
-       legend = c("s = 5", "s = 1", "s = .1"),
-       lty = 1)
-
-dev.off()
-
-## Euler integrator — one panel per epsilon
-pdf("eular_traj.pdf", width = 16, height = 5)
-
-par(mfrow = c(1, 3), mar = c(4, 5, 1, 1), oma = c(0,0,0,0))
-
-# Plotting settings
-cex_lab  <- 1.5
-cex_axis <- 1.2
-cex_leg  <- 2
-pt_cex   <- 1.5
-lwd_line <- 2
-
-# True Hamiltonian (analytic circular orbit)
-r <- 3
-a <- 1
-t_cont <- seq(0, 2*pi, length.out = 1e3)
-x_true <- r * cos(a + t_cont)
-p_true <- -r * sin(a + t_cont)
-
-eps_vals <- c(0.5, 0.2, 0.1)
-cols <- c("darkgreen", "darkblue", "darkred")
-
-for (k in seq_along(eps_vals)) {
-  eps <- eps_vals[k]
-  
-  # Euler discrete trajectory
-  t_seq <- seq(0, 100 * eps, by = eps)
-  n <- length(t_seq)
-  e_p <- numeric(n)
-  e_q <- numeric(n)
-  e_p[1] <- p_true[1]
-  e_q[1] <- x_true[1]
-  for (i in 2:n) {
-    e_p[i] <- e_p[i-1] - eps * e_q[i-1]
-    e_q[i] <- e_q[i-1] + eps * e_p[i]
-  }
-  
-  # Panel plot: true contour + Euler trajectory
-  plot(x_true, p_true, type = "l", lwd = lwd_line, col = "black",
-       xlim = c(-3.5, 3.5), ylim = c(-3.5, 3.5), asp = 1,
-       xlab = expression(Position~(x)),
-       ylab = expression(Momentum~(p)),
-       cex.lab = cex_lab, cex.axis = cex_axis, las = 1)
-  lines(e_q, e_p, type = "b", pch = 16, cex = pt_cex,
-        col = cols[k], lty = 2, lwd = lwd_line)
-  
-  # Legend: true Hamiltonian + epsilon
-  legend("topright",
-         legend = c(expression("True Hamiltonian"), bquote(epsilon == .(eps))),
-         col = c("black", cols[k]),
-         lty = c(1,2),
-         pch = c(NA, 16),
-         lwd = c(lwd_line, lwd_line),
-         bty = "n", cex = cex_leg)
-}
-
-dev.off()
-
-## Modified Euler integrator — one panel per epsilon
-pdf("modified_euler_traj.pdf", width = 16, height = 5)
-
-par(mfrow = c(1, 3), mar = c(4, 5, 1, 1), oma = c(0,0,0,0))
-
-# Plotting settings
-cex_lab  <- 1.5
-cex_axis <- 1.2
-cex_leg  <- 2
-pt_cex   <- 1.5
-lwd_line <- 2
-
-# True Hamiltonian (analytic circular orbit)
-r <- 3
-a <- 1
-t_cont <- seq(0, 2*pi, length.out = 1e3)
-x_true <- r * cos(a + t_cont)
-p_true <- -r * sin(a + t_cont)
-
-eps_vals <- c(0.5, 0.2, 0.1)
-cols <- c("darkgreen", "darkblue", "darkred")
-
-for (k in seq_along(eps_vals)) {
-  eps <- eps_vals[k]
-  
-  # Modified Euler discrete trajectory
-  t_seq <- seq(0, 20 * eps, by = eps)
-  n <- length(t_seq)
-  m_p <- numeric(n)
-  m_q <- numeric(n)
-  m_p[1] <- p_true[1]
-  m_q[1] <- x_true[1]
-  
-  for (i in 2:n) {
-    # Modified Euler (symplectic Euler)
-    m_p[i] <- m_p[i-1] - eps * m_q[i-1]
-    m_q[i] <- m_q[i-1] + eps * m_p[i]   # <-- use new momentum!
-  }
-  
-  # Panel plot: true contour + modified Euler trajectory
-  plot(x_true, p_true, type = "l", lwd = lwd_line, col = "black",
-       xlim = c(-3.5, 3.5), ylim = c(-3.5, 3.5), asp = 1,
-       xlab = expression(Position~(x)),
-       ylab = expression(Momentum~(p)),
-       cex.lab = cex_lab, cex.axis = cex_axis, las = 1)
-  lines(m_q, m_p, type = "b", pch = 16, cex = pt_cex,
-        col = cols[k], lty = 2, lwd = lwd_line)
-  
-  # Legend: true Hamiltonian + epsilon
-  legend("topright",
-         legend = c(expression(H_true), bquote(epsilon == .(eps))),
-         col = c("black", cols[k]),
-         lty = c(1,2),
-         pch = c(NA, 16),
-         lwd = c(lwd_line, lwd_line),
-         bty = "n", cex = cex_leg)
-}
-
-dev.off()
-
-
-
-## lfd6: Leapfrog integrator — one panel per epsilon
+# Figure 5 in Section 3
+## Leapfrog integrator — one panel per epsilon
 pdf("leapfrog_traj.pdf", width = 16, height = 5)
 
 par(mfrow = c(1, 3), mar = c(4, 5, 1, 1), oma = c(0,0,0,0))
@@ -430,63 +281,6 @@ for (k in seq_along(eps_vals)) {
 dev.off()
 
 
-########## 
-# 
-# pdf("lfd_normal_diff_s.pdf", width = 4, height = 4)
-# r <- 3
-# a <- 1
-# t <- seq(0, 10, length = 5e2)
-# q <- r * cos(a + t)
-# p <- -r * sin(a + t)
-# L <- 20
-# 
-# eps <- .3
-# e_p <- numeric(length = length(L))
-# e_q <- numeric(length = length(L))
-# e_q[1] <- q[1]
-# e_p[1] <- p[1] - eps/2 * e_q[1]
-# for(i in 2:L)
-# {
-#   e_q[i] <- e_q[i-1] + eps*e_p[i-1]
-#   if(i != L) e_p[i] <- e_p[i-1] - eps*e_q[i]
-# }
-# e_p[L] <- e_p[L-1] - eps*e_q[L]/2
-# plot(q, p, type = 'l', ylim = c(-3.5,3.5), xlim = c(-3.5,3.5), asp = 1, lty = 1)
-# lines(e_q, e_p, lty = 2, col = "purple", type = "b", pch = 16)
-# 
-# eps <- .2
-# e_p <- numeric(length = length(L))
-# e_q <- numeric(length = length(L))
-# e_q[1] <- q[1]
-# e_p[1] <- p[1] - eps/2 * e_q[1]
-# for(i in 2:L)
-# {
-#   e_q[i] <- e_q[i-1] + eps*e_p[i-1]
-#   if(i != L) e_p[i] <- e_p[i-1] - eps*e_q[i]
-# }
-# e_p[L] <- e_p[L-1] - eps*e_q[L]/2
-# lines(e_q, e_p, lty = 2, col = "blue", type = "b", pch = 16)
-# 
-# eps <- .1
-# e_p <- numeric(length = length(L))
-# e_q <- numeric(length = length(L))
-# e_q[1] <- q[1]
-# e_p[1] <- p[1] - eps/2 * e_q[1]
-# for(i in 2:L)
-# {
-#   e_q[i] <- e_q[i-1] + eps*e_p[i-1]
-#   if(i != L) e_p[i] <- e_p[i-1] - eps*e_q[i]
-# }
-# e_p[L] <- e_p[L-1] - eps*e_q[L]/2
-# lines(e_q, e_p, lty = 2, col = "darkgreen", type = "b", pch = 16)
-# legend("center", 
-#        legend = c("eps = .3", "eps = .2", "eps = .1"), 
-#        fill = c("darkgreen", "darkblue", "darkred"), 
-#        cex = .80, bty = "n")
-# 
-# dev.off()
-
-
 ########## Leapfrog for standard Normal ############
 
 
@@ -534,6 +328,7 @@ chain1 <- normal_HMC(L = 10, eps = .1)
 chain2 <- normal_HMC(L = 1, eps = 1)
 chain3 <- normal_HMC(L = 100, eps = .01) # more time consuming
 
+# Figure 6 in Section 4
 ########## Leapfrog with s = 1 #########
 pdf("lfd_with_s1.pdf", width = 16, height = 5)
 
@@ -551,11 +346,11 @@ x <- seq(-3, 3, length = 1e3)
 plot(x, dnorm(x), type = "l", lwd = 2,
      ylab = expression(Density~pi(x)), xlab = expression(Position~(x)),
      cex.lab = 2.2, cex.axis = 1.8)
-lines(density(chain1), col = col_blue,   lwd = 2)
-lines(density(chain2), col = col_red,    lwd = 2)
-lines(density(chain3), col = col_orange, lwd = 2)
+lines(density(chain1), col = "blue",   lwd = 2)
+lines(density(chain2), col = "red",    lwd = 2)
+lines(density(chain3), col = "orange", lwd = 2)
 legend("topright",
-       col = c("black", col_orange, col_red, col_blue),
+       col = c("black", "orange", "red", "blue"),
        legend = c("Truth", 
                   expression(epsilon == 0.01),
                   expression(epsilon == 1),
@@ -563,17 +358,17 @@ legend("topright",
        lty = 1, cex = 2.2, bty = "n")
 
 ## (2) Trace plot
-plot.ts(chain1, col = col_blue, lwd = 2, ylim = c(-4, 6),
+plot.ts(chain1, col = "blue", lwd = 2, ylim = c(-4, 6),
         axes = FALSE, ann = FALSE)
-lines(chain2, col = col_red,  lwd = 2)
-lines(chain3, col = col_orange, lwd = 2)
+lines(chain2, col = "red",  lwd = 2)
+lines(chain3, col = "orange", lwd = 2)
 axis(1, cex.axis = cex_axis)
 axis(2, cex.axis = cex_axis)
 box()
 mtext(expression(Iterations), side = 1, line = 2.8, cex = cex_lab)
 mtext("Trace plot", side = 2, line = 3.5, cex = cex_lab)
 legend("topright",
-       col = c(col_orange, col_red, col_blue),
+       col = c("orange", "red", "blue"),
        legend = c(expression(epsilon == 0.01),
                   expression(epsilon == 1),
                   expression(epsilon == 0.1)),
@@ -586,19 +381,19 @@ acf2 <- acf(chain2, plot = FALSE, lag.max = lagmax)
 acf3 <- acf(chain3, plot = FALSE, lag.max = lagmax)
 lags <- as.numeric(acf1$lag)
 
-plot(lags, as.numeric(acf1$acf), type = "l", lwd = 2, col = col_blue,
+plot(lags, as.numeric(acf1$acf), type = "l", lwd = 2, col = "blue",
      ylim = c(min(c(acf1$acf, acf2$acf, acf3$acf)),
               max(c(acf1$acf, acf2$acf, acf3$acf))),
      axes = FALSE, xlab = "", ylab = "")
-lines(lags, as.numeric(acf2$acf), col = col_red, lwd = 2)
-lines(lags, as.numeric(acf3$acf), col = col_orange, lwd = 2)
+lines(lags, as.numeric(acf2$acf), col = "red", lwd = 2)
+lines(lags, as.numeric(acf3$acf), col = "orange", lwd = 2)
 axis(1, cex.axis = cex_axis)
 axis(2, cex.axis = cex_axis)
 box()
 mtext("Lag", side = 1, line = 2.8, cex = cex_lab)
 mtext("ACF", side = 2, line = 3.5, cex = cex_lab)
 legend("topright",
-       col = c(col_orange, col_red, col_blue),
+       col = c("orange", "red", "blue"),
        legend = c(expression(epsilon == 0.01),
                   expression(epsilon == 1),
                   expression(epsilon == 0.1)),
@@ -611,6 +406,7 @@ chain1 <- normal_HMC(L = 100, eps = .1)
 chain2 <- normal_HMC(L = 10,  eps = 1)
 chain3 <- normal_HMC(L = 1,   eps = 10)
 
+# Figure 7 in Section 4 
 ########## Leapfrog with s = 10 #########
 pdf("lfd_with_s10.pdf", width = 16, height = 5)
 
@@ -627,11 +423,11 @@ x <- seq(-3, 3, length = 1e3)
 plot(x, dnorm(x), type = "l", lwd = 2,
      ylab = expression(Density~pi(x)), xlab = expression(Position~(x)),
      cex.lab = 2.2, cex.axis = 1.8)
-lines(density(chain1), col = col_blue,   lwd = 2)
-lines(density(chain2), col = col_red,    lwd = 2)
-lines(density(chain3), col = col_orange, lwd = 2)
+lines(density(chain1), col = "blue",   lwd = 2)
+lines(density(chain2), col = "red",    lwd = 2)
+lines(density(chain3), col = "orange", lwd = 2)
 legend("topright",
-       col = c("black", col_orange, col_red, col_blue),
+       col = c("black", "orange", "red", "blue"),
        legend = c("Truth",
                   expression(epsilon == 10),
                   expression(epsilon == 1),
@@ -639,17 +435,17 @@ legend("topright",
        lty = 1, cex = 2.2, bty = "n")
 
 ## (2) Trace plot
-plot.ts(chain1, col = col_blue, lwd = 2, ylim = c(-4, 6),
+plot.ts(chain1, col = "blue", lwd = 2, ylim = c(-4, 6),
         axes = FALSE, ann = FALSE)
-lines(chain2, col = col_red,  lwd = 2)
-lines(chain3, col = col_orange, lwd = 2)
+lines(chain2, col = "red",  lwd = 2)
+lines(chain3, col = "orange", lwd = 2)
 axis(1, cex.axis = cex_axis)
 axis(2, cex.axis = cex_axis)
 box()
 mtext(expression(Iterations), side = 1, line = 2.8, cex = cex_lab)
 mtext("Trace plot", side = 2, line = 3.5, cex = cex_lab)
 legend("topright",
-       col = c(col_orange, col_red, col_blue),
+       col = c("orange", "red", "blue"),
        legend = c(expression(epsilon == 10),
                   expression(epsilon == 1),
                   expression(epsilon == 0.1)),
@@ -662,19 +458,19 @@ acf2 <- acf(chain2, plot = FALSE, lag.max = lagmax)
 acf3 <- acf(chain3, plot = FALSE, lag.max = lagmax)
 lags <- as.numeric(acf1$lag)
 
-plot(lags, as.numeric(acf1$acf), type = "l", lwd = 2, col = col_blue,
+plot(lags, as.numeric(acf1$acf), type = "l", lwd = 2, col = "blue",
      ylim = c(min(c(acf1$acf, acf2$acf, acf3$acf)),
               max(c(acf1$acf, acf2$acf, acf3$acf))),
      axes = FALSE, xlab = "", ylab = "")
-lines(lags, as.numeric(acf2$acf), col = col_red, lwd = 2)
-lines(lags, as.numeric(acf3$acf), col = col_orange, lwd = 2)
+lines(lags, as.numeric(acf2$acf), col = "red", lwd = 2)
+lines(lags, as.numeric(acf3$acf), col = "orange", lwd = 2)
 axis(1, cex.axis = cex_axis)
 axis(2, cex.axis = cex_axis)
 box()
 mtext("Lag", side = 1, line = 2.8, cex = cex_lab)
 mtext("ACF", side = 2, line = 3.5, cex = cex_lab)
 legend("topright",
-       col = c(col_orange, col_red, col_blue),
+       col = c("orange", "red", "blue"),
        legend = c(expression(epsilon == 10),
                   expression(epsilon == 1),
                   expression(epsilon == 0.1)),
@@ -700,90 +496,9 @@ chain_full    <- normal_HMC(L = L_full,    eps = eps)
 chain_half    <- normal_HMC(L = L_half,    eps = eps)
 chain_quarter <- normal_HMC(L = L_quarter, eps = eps)
 
-########## Plot: Density, Trace, ACF ##########
 
-pdf("lfd_period_based.pdf", width = 16, height = 5)
-
-par(mfrow = c(1, 3), mar = c(4, 5, 1, 1), oma = c(0,0,0,0))
-
-cex_lab  <- 1.5
-cex_axis <- 1.2
-leg_cex  <- 2
-
-x <- seq(-3, 3, length = 1000)
-
-### (1) Density plot
-plot(x, dnorm(x), type = "l", lwd = 2,
-     ylab = expression(Density~pi(x)),
-     xlab = expression(Position~(x)),
-     cex.lab = 2.2, cex.axis = 1.8)
-
-lines(density(chain_quarter), col = col_orange, lwd = 2)
-lines(density(chain_half),    col = col_red,    lwd = 2)
-lines(density(chain_full),    col = col_blue,   lwd = 2)
-
-legend("topright",
-       col = c("black", col_orange, col_red, col_blue),
-       legend = c("Truth",
-                  "Quarter period",
-                  "Half period",
-                  "Full period"),
-       lty = 1, cex = 2.2, bty = "n")
-
-### (2) Trace plot
-plot.ts(chain_full, col = col_blue, lwd = 2,
-        ylim = range(c(chain_quarter, chain_half, chain_full)),
-        axes = FALSE, ann = FALSE)
-lines(chain_half, col = col_red,  lwd = 2)
-lines(chain_quarter, col = col_orange, lwd = 2)
-
-axis(1, cex.axis = cex_axis)
-axis(2, cex.axis = cex_axis)
-box()
-
-mtext(expression(Iterations), side = 1, line = 2.8, cex = cex_lab)
-mtext("Trace plot",          side = 2, line = 3.5, cex = cex_lab)
-
-legend("topright",
-       col = c(col_orange, col_red, col_blue),
-       legend = c("Quarter period",
-                  "Half period",
-                  "Full period"),
-       lty = 1, cex = 2, bty = "n")
-
-### (3) ACF plot
-lagmax <- 50
-acf_full    <- acf(chain_full,    plot = FALSE, lag.max = lagmax)
-acf_half    <- acf(chain_half,    plot = FALSE, lag.max = lagmax)
-acf_quarter <- acf(chain_quarter, plot = FALSE, lag.max = lagmax)
-
-lags <- as.numeric(acf_full$lag)
-
-plot(lags, as.numeric(acf_full$acf), type = "l", lwd = 2, col = col_blue,
-     ylim = range(c(acf_full$acf, acf_half$acf, acf_quarter$acf)),
-     axes = FALSE, xlab = "", ylab = "")
-
-lines(lags, as.numeric(acf_half$acf),    col = col_red,    lwd = 2)
-lines(lags, as.numeric(acf_quarter$acf), col = col_orange, lwd = 2)
-
-axis(1, cex.axis = cex_axis)
-axis(2, cex.axis = cex_axis)
-box()
-
-mtext("Lag", side = 1, line = 2.8, cex = cex_lab)
-mtext("ACF", side = 2, line = 3.5, cex = cex_lab)
-
-legend("topright",
-       col = c(col_orange, col_red, col_blue),
-       legend = c("Quarter period",
-                  "Half period",
-                  "Full period"),
-       lty = 1, cex = 2, bty = "n")
-
-dev.off()
-
-
-########## Leapfrog trajectories for different L (fixed epsilon) ##########
+# Figure 8 in Section 4
+# Leapfrog trajectories for different L (fixed epsilon) #
 
 pdf("leapfrog_traj_periodicity.pdf", width = 16, height = 5)
 
