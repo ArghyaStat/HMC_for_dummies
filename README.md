@@ -12,4 +12,4 @@
 
  Contains figures for Section 5 in the article.
 
- Contains posterior_beta_warmup.RData and posterior_beta_samples.RData for warm-up HMC chain and pre-conditioned HMC chain for Section 5.
+ Contains posterior_beta_warmup.RData and posterior_beta_samples.RData of warm-up HMC chain and pre-conditioned HMC chain, respectively, for Section 5.
