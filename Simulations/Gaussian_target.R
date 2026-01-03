@@ -136,7 +136,7 @@ normal_idealHMC <- function(s = 1, n = 1e4)
     # simulating Hamiltonian forward s time units 
     # no practical need to flip momentum
     x[k] <- x[k-1]*cos(s) + p*sin(s)
-    p <- -x[k]*sin(s) + p*cos(s)
+    p <- -x[k-1]*sin(s) + p*cos(s)
   }
   return(x) # not returning momentum
 }

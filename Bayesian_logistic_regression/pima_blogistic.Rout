@@ -1,0 +1,359 @@
+
+R version 4.5.1 (2025-06-13) -- "Great Square Root"
+Copyright (C) 2025 The R Foundation for Statistical Computing
+Platform: aarch64-apple-darwin20
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> rm(list = ls())
+> 
+> mydir <- this.path::here()
+> setwd(mydir)
+> 
+> # ---- Hamiltonian Monte Carlo (HMC) ----
+> 
+> leapfrog_hmc <- function(epsilon, L, niters, U, grad, x_init, M) {
++   
++   d <- length(x_init)
++   M_inv <- chol2inv(chol(M))
++   
++   # ---- store samples ----
++   x <- matrix(NA, nrow = niters, ncol = d)
++   x[1, ] <- x_init
++   
++   # ---- pre-draw all momentum values ----
++   
++   chol_M <- chol(M)
++   
++   p <- matrix(rnorm(niters * d), nrow = niters, ncol = d) %*% chol_M
++   
++   acc <- 0
++   
++   
++   for (k in 2:niters) {
++     
++     x_prop <- x[k-1, ]        
++     p_prop <- p[k, ]        
++     
++     g <- grad(x_prop)
++     p_prop <- p_prop - (epsilon / 2) * g
++     
++     
++     for (l in 1:L) {
++       
++       # position update
++       x_prop <- x_prop + epsilon * (M_inv %*% p_prop)
++       
++       # momentum update
++       g <- grad(x_prop)
++       if (l != L) {
++         p_prop <- p_prop - epsilon * g
++       } 
++     }
++     
++     p_prop <- p_prop - (epsilon / 2) * g
++     
++     
++     x_curr <- x[k-1, ]
++     p_curr <- p[k, ]
++     
++     H_curr <- U(x_curr) + 0.5 * t(p_curr) %*% (M_inv %*% p_curr)
++     H_prop <- U(x_prop) + 0.5 * t(p_prop) %*% (M_inv %*% p_prop)
++     
++     log_alpha <- -(H_prop - H_curr)
++     
++     # ---- Metropolis accept/reject ----
++     if (log(runif(1)) < log_alpha) {
++       x[k, ] <- x_prop
++       acc <- acc + 1
++     } else {
++       x[k, ] <- x_curr
++     }
++   }
++   
++   list(samples = x, acceptance = acc/(niters))
++ }
+> 
+> set.seed(123)
+> 
+> # ---- Load Data ----
+> data(Pima.tr, package = "MASS")
+> 
+> # ---- Prepare Response and Design Matrix ----
+> y <- as.numeric(Pima.tr$type == "Yes")
+> X <- as.matrix(Pima.tr[, !names(Pima.tr) %in% "type"])
+> X <- cbind(1, X)  # add intercept
+> # colnames(X)[1] <- "Intercept"
+> n <- nrow(X)
+> d <- ncol(X)  # number of regression coefficients
+> 
+> # ---- Prior ----
+> sigma2_beta <- 1e2 
+> 
+> # ---- Potential Energy and Gradient ----
+> U <- function(beta) {
++   eta <- X %*% beta
++   loglik <- sum(y * eta - log(1 + exp(eta)))
++   prior <- sum(beta^2) / (2 * sigma2_beta)
++   return(-loglik + prior)
++ }
+> 
+> grad_U <- function(beta) {
++   eta <- X %*% beta
++   p_hat <- 1 / (1 + exp(-eta))
++   grad_loglik <- t(X) %*% (y - p_hat)
++   grad_prior <- beta / sigma2_beta
++   return(-grad_loglik + grad_prior)
++ }
+> 
+> 
+> 
+> # --- HMC parameters ---
+> warmup <- 1e5
+> epsilon <- 2.1e-3 
+> L <- 20
+> M <- diag(d)
+> 
+> 
+> # --- Initialize beta using MLE ---
+> beta_init <- glm(y ~ X - 1, family = "binomial")$coefficients
+> 
+> hmc_warmup <- leapfrog_hmc(epsilon = epsilon, 
++                            L = L, 
++                            niters = warmup, 
++                            U = U, 
++                            grad = grad_U, 
++                            x_init = beta_init, 
++                            M = M)
+> accept_warmup <- hmc_warmup$acceptance
+> cat(sprintf("HMC acceptance rate: %.4f\n", accept_warmup))
+HMC acceptance rate: 0.6326
+> beta_warmup <- hmc_warmup$samples
+> 
+> # ---- Save Posterior Samples ----
+> save(beta_warmup, accept_warmup, file = "posterior_beta_warmup.RData")
+> 
+> load("posterior_beta_warmup.RData") 
+> 
+> # --- HMC parameters ---
+> niters <- 1e5
+> #epsilon <- 1.1 # tuning for full precision matrix M pre-conditioning
+> epsilon <- 0.11 # tuning for diagonal M pre-conditioning
+> L <- 20
+> M <- diag(1/diag(cov(beta_warmup))) # diagonal preconditiong
+> # solve(cov(beta_warmup))  ## full preconditioning
+> 
+> 
+> # --- Initialize beta ---
+> beta_init <- beta_warmup[warmup, ]
+> 
+> hmc_output <- leapfrog_hmc(epsilon = epsilon, 
++                            L = L, 
++                            niters = niters, 
++                            U = U, 
++                            grad = grad_U, 
++                            x_init = beta_init, 
++                            M = M)
+> accept_main <- hmc_output$acceptance
+> cat(sprintf("HMC acceptance rate: %.4f\n", accept_main))
+HMC acceptance rate: 0.6597
+> beta_samples <- hmc_output$samples
+> 
+> 
+> # ---- Save Posterior Samples ----
+> save(beta_samples, accept_main, file = "posterior_beta_samples.RData")
+> 
+> 
+> ##### HMC Density Plots for Posterior Samples #####
+> 
+> 
+> load("posterior_beta_samples.RData")   
+> 
+> 
+> var_names <- c("Intercept", "pregnant", "glucose", "pressure",
++                "triceps", "mass", "pedigree", "age")
+> 
+> library(SimTools)
+> library(MASS)
+> 
+> k <- 1e4
+> 
+> #### Naive sampler visualization ####
+> 
+> # ---- Subset last k samples ----
+> warmup_lastk <- tail(beta_warmup, k)
+> 
+> # ---- Create one list per column ----
+> warmup_lists <- lapply(1:d, function(j) warmup_lastk[, j])
+> names(warmup_lists) <- var_names
+> 
+> # ---- Convert each column to an Smcmc object ----
+> Smcmc_warmup <- lapply(warmup_lists, Smcmc)
+> 
+> cex_lab  <- 2
+> cex_axis <- 1.8
+> 
+> # ---- PDF output ----
+> pdf("warmup_density_plots.pdf", width = 10, height = 12)
+> 
+> # ---- Layout and margins ----
+> par(mfrow = c(4, 2),                      # 8 panels → 4 rows × 2 columns
++     mar  = c(3.5, 4.5, 0.8, 0.8),         # margins: bottom, left, top, right
++     oma  = c(0.5, 0.5, 0.5, 0.5),
++     mgp  = c(2.2, 0.8, 0))                # axis label spacing
+> 
+> # ---- Generate density plots ----
+> for (j in 1:d) {
++   smcmc_obj <- Smcmc_warmup[[j]]
++   dens <- density(smcmc_obj$stacked)
++   
++   plot(dens,
++        main = "",
++        xlab = var_names[j],
++        ylab = "Density",
++        cex.lab = cex_lab, cex.axis = cex_axis)
++   
++   # Add 90% credible interval
++   CIs <- getCI(smcmc_obj, Q = c(0.05, 0.95))
++   addCI(smcmc_obj, CIs, component = 1)
++ }
+> 
+> dev.off()
+null device 
+          1 
+> 
+> # ---- PDF output ----
+> pdf("warmup_trace_plots.pdf", width = 10, height = 12)
+> 
+> # ---- Layout and margins ----
+> par(mfrow = c(4, 2),
++     mar  = c(3.5, 4.5, 1.2, 0.8),
++     oma  = c(0.5, 0.5, 0.5, 0.5),
++     mgp  = c(2.2, 0.8, 0))
+> 
+> # ---- Font sizes ----
+> cex_lab  <- 2
+> cex_axis <- 1.8
+> lwd_line <- 1.5
+> 
+> # ---- Plot trace for each beta ----
+> for (j in 1:d) {
++   beta_j <- warmup_lastk[, j]
++   mean_j <- mean(warmup_lastk[, j])
++   
++   plot((warmup - k + 1):warmup, beta_j, type = "l", lwd = lwd_line,
++        col = "darkorange", bty = "l",
++        xlab = "Iterations", ylab = var_names[j],
++        cex.lab = cex_lab, cex.axis = cex_axis)
++   
++   abline(h = mean(beta_warmup[, j]), col = "firebrick", lwd = 2, lty = 2)
++   
++   legend("topright",
++          legend = c("Post.mean"),
++          col = "firebrick", lty = 2, lwd = 2,
++          bty = "n", cex = 1.4)
++   
++   
++ }
+> 
+> dev.off()
+null device 
+          1 
+> 
+> #### Pre-conditioning sampler visualization ####
+> 
+> # ---- Subset last k samples ----
+> samples_lastk <- tail(beta_samples, k)
+> 
+> # ---- Create one list per column ----
+> hmc_lists <- lapply(1:d, function(j) samples_lastk[, j])
+> names(hmc_lists) <- var_names
+> 
+> # ---- Convert each column to an Smcmc object ----
+> Smcmc_list <- lapply(hmc_lists, Smcmc)
+> 
+> cex_lab  <- 2
+> cex_axis <- 1.8
+> 
+> # ---- PDF output ----
+> pdf("SimTools_density_plots.pdf", width = 10, height = 12)
+> 
+> # ---- Layout and margins ----
+> par(mfrow = c(4, 2),                      # 8 panels → 4 rows × 2 columns
++     mar  = c(3.5, 4.5, 0.8, 0.8),         # margins: bottom, left, top, right
++     oma  = c(0.5, 0.5, 0.5, 0.5),
++     mgp  = c(2.2, 0.8, 0))                # axis label spacing
+> 
+> # ---- Generate density plots ----
+> for (j in 1:d) {
++   smcmc_obj <- Smcmc_list[[j]]
++   dens <- density(smcmc_obj$stacked)
++   
++   plot(dens,
++        main = "",
++        xlab = var_names[j],
++        ylab = "Density",
++        cex.lab = cex_lab, cex.axis = cex_axis)
++   
++   # Add 90% credible interval
++   CIs <- getCI(smcmc_obj, Q = c(0.05, 0.95))
++   addCI(smcmc_obj, CIs, component = 1)
++ }
+> 
+> dev.off()
+null device 
+          1 
+> 
+> # ---- PDF output ----
+> pdf("HMC_trace_plots.pdf", width = 10, height = 12)
+> 
+> # ---- Layout and margins ----
+> par(mfrow = c(4, 2),
++     mar  = c(3.5, 4.5, 1.2, 0.8),
++     oma  = c(0.5, 0.5, 0.5, 0.5),
++     mgp  = c(2.2, 0.8, 0))
+> 
+> # ---- Font sizes ----
+> cex_lab  <- 2
+> cex_axis <- 1.8
+> lwd_line <- 1.5
+> 
+> # ---- Plot trace for each beta ----
+> for (j in 1:d) {
++   beta_j <- samples_lastk[, j]
++   mean_j <- mean(samples_lastk[, j])
++   
++   plot((niters - k + 1):niters, beta_j, type = "l", lwd = lwd_line,
++        col = "darkorange", bty = "l",
++        xlab = "Iterations", ylab = var_names[j],
++        cex.lab = cex_lab, cex.axis = cex_axis)
++   
++   abline(h = mean(beta_samples[, j]), col = "firebrick", lwd = 2, lty = 2)
++   
++   legend("topright",
++          legend = c("Post.mean"),
++          col = "firebrick", lty = 2, lwd = 2,
++          bty = "n", cex = 1.4)
++   
++   
++ }
+> 
+> dev.off()
+null device 
+          1 
+> 
+> proc.time()
+   user  system elapsed 
+ 78.853   4.861  84.584 
