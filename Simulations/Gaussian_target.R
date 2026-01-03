@@ -270,7 +270,7 @@ for (k in seq_along(eps_vals)) {
   
   # Legend: true Hamiltonian + epsilon
   legend("topright",
-         legend = c(expression(H_true), bquote(epsilon == .(eps))),
+         legend = c(expression(Hamiltonian), bquote(epsilon == .(eps))),
          col = c("black", cols[k]),
          lty = c(1,2),
          pch = c(NA, 16),
@@ -564,7 +564,7 @@ for (k in seq_along(L_vals)) {
   # Legend: true Hamiltonian + L
   legend("topright",
          legend = c(
-           expression(H_true),
+           expression(Hamiltonian),
            bquote(L == .(L))
          ),
          col = c("black", cols[k]),
