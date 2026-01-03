@@ -114,9 +114,9 @@ plot(x, -dnorm(x, log = TRUE), type = 'l',
      cex.lab = 1.5,    # enlarge axis labels
      cex.axis = 1.2, lwd = 2)
 lines(x_new[1:101], -dnorm(x_new[1:101], log = TRUE), col = "purple", lwd = 2)
-points(x = x_new[1], y = -dnorm(x_new[1], log = TRUE), pch = 16, col = "orange", cex = 1.3)
+points(x = x_new[1], y = -dnorm(x_new[1], log = TRUE), pch = 16, col = "purple", cex = 1.3)
 text(x_new[1]+.4, -dnorm(x_new[1], log = TRUE), "t = 0")
-points(x = x_new[101], y = -dnorm(x_new[101], log = TRUE), pch = 16, col = "orange", cex = 1.3)
+points(x = x_new[101], y = -dnorm(x_new[101], log = TRUE), pch = 16, col = "purple", cex = 1.3)
 text(x_new[101]+.3, -dnorm(x_new[101], log = TRUE) + .1, "t = 2")
 
 dev.off()
@@ -350,11 +350,11 @@ lines(density(chain1), col = "blue",   lwd = 2)
 lines(density(chain2), col = "red",    lwd = 2)
 lines(density(chain3), col = "orange", lwd = 2)
 legend("topright",
-       col = c("black", "orange", "red", "blue"),
+       col = c("black", "red", "blue", "orange"),
        legend = c("Truth", 
-                  expression(epsilon == 0.01),
                   expression(epsilon == 1),
-                  expression(epsilon == 0.1)),
+                  expression(epsilon == 0.1),
+                  expression(epsilon == 0.01)),
        lty = 1, cex = 2.2, bty = "n")
 
 ## (2) Trace plot
@@ -368,10 +368,10 @@ box()
 mtext(expression(Iterations), side = 1, line = 2.8, cex = cex_lab)
 mtext("Trace plot", side = 2, line = 3.5, cex = cex_lab)
 legend("topright",
-       col = c("orange", "red", "blue"),
-       legend = c(expression(epsilon == 0.01),
-                  expression(epsilon == 1),
-                  expression(epsilon == 0.1)),
+       col = c("red", "blue", "orange"),
+       legend = c(expression(epsilon == 1),
+                  expression(epsilon == 0.1),
+                  expression(epsilon == 0.01)),
        lty = 1, cex = 2, bty = "n")
 
 ## (3) ACF as line plots
@@ -393,10 +393,10 @@ box()
 mtext("Lag", side = 1, line = 2.8, cex = cex_lab)
 mtext("ACF", side = 2, line = 3.5, cex = cex_lab)
 legend("topright",
-       col = c("orange", "red", "blue"),
-       legend = c(expression(epsilon == 0.01),
-                  expression(epsilon == 1),
-                  expression(epsilon == 0.1)),
+       col = c("red", "blue", "orange"),
+       legend = c(expression(epsilon == 1),
+                  expression(epsilon == 0.1),
+                  expression(epsilon == 0.01)),
        lty = 1, cex = 2, bty = "n")
 
 dev.off()
