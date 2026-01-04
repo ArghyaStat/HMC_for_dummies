@@ -269,9 +269,9 @@ for (k in seq_along(eps_vals)) {
         col = cols[k], lty = 2, lwd = lwd_line)
   
   # Legend: true Hamiltonian + epsilon
-  legend("topright",
-         legend = c(expression(Hamiltonian), bquote(epsilon == .(eps))),
-         col = c("black", cols[k]),
+  legend("bottomleft",
+         legend = c(bquote(epsilon == .(eps)), expression(Hamiltonian)),
+         col = c(cols[k], "black"),
          lty = c(1,2),
          pch = c(NA, 16),
          lwd = c(lwd_line, lwd_line),
@@ -562,12 +562,10 @@ for (k in seq_along(L_vals)) {
         col = cols[k], lty = 2, lwd = lwd_line)
   
   # Legend: true Hamiltonian + L
-  legend("topright",
-         legend = c(
-           expression(Hamiltonian),
-           bquote(L == .(L))
-         ),
-         col = c("black", cols[k]),
+  legend("bottomleft",
+         legend = c(bquote(L == .(L)),
+                    expression(Hamiltonian)),
+         col = c(cols[k], "black"),
          lty = c(1,2),
          pch = c(NA, 16),
          lwd = c(lwd_line, lwd_line),
